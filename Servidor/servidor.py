@@ -73,13 +73,14 @@ class Server:
                         jugador = self.parques.jugador_actual
                         if jugador.nombre == nombre:
                             client_socket.sendall("Es tu turno. Presiona Enter para lanzar los dados.".encode('utf-8'))
-                            client_socket.recv(1024)  # Espera a que el jugador presione Enter
+                            respuesta = client_socket.recv(1024)  # Espera a que el jugador presione Enter
 
-                            valor_dados = self.parques.lanzar_dados()
-                            self.parques.movimiento_fichas(sum(valor_dados))
-                            turn_message = f"{nombre} lanza {valor_dados} y mueve sus fichas."
-                            print(turn_message)
-                            self.broadcast(turn_message)
+                            if respuesta == "dados":
+                                valor_dados = self.parques.lanzar_dados()
+                                self.parques.movimiento_fichas(sum(valor_dados))
+                                turn_message = f"{nombre} lanza {valor_dados} y mueve sus fichas."
+                                print(turn_message)
+                                self.broadcast(turn_message)
 
                             if self.parques.ganador:
                                 winner_message = f"El ganador es {nombre}!"

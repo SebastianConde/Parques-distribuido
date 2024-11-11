@@ -67,7 +67,7 @@ class JuegoParques:
             self.window.blit(self.ficha_verde, (-40 + MP.meta["VERDE8"][0], 35 + MP.meta["VERDE8"][1] + i * 30))
 
     def mostrar_mensaje(self, mensaje):
-        """Muestra un mensaje en la pantalla"""
+        """Actualiza el mensaje actual y el tiempo de visualización"""
         self.mensaje_actual = mensaje
         self.tiempo_mensaje = pygame.time.get_ticks()
 

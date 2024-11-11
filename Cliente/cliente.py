@@ -18,7 +18,7 @@ class Cliente:
         self.turno = False
         self.mensaje_queue = queue.Queue()
         self.running = True
-        self.esperando_respuesta = False
+        self.esperando_respuesta = False # Bandera para esperar respuesta del jugador
         self.esperando_inicio = False
         self.estado_actual = "MENU"  # Estados: MENU, ENTRADA_NOMBRE, JUGANDO, ESPERANDO_INICIO
         self.ultimo_mensaje = None
@@ -68,8 +68,16 @@ class Cliente:
             if "¿Desean iniciar el juego ahora? (si/no)" in mensaje:
                 self.estado_actual = "ESPERANDO_INICIO"
                 self.esperando_inicio = True
-            elif "Es tu turno" in mensaje:
+            
+            if "Es tu turno" in mensaje:
+                self.turno = True
                 self.esperando_respuesta = True
+                self.mostrar_mensaje_con_delay(mensaje)
+            elif "Espera tu turno" in mensaje:
+                self.turno = False
+                self.mostrar_mensaje_con_delay(mensaje)
+            else:
+                self.mostrar_mensaje_con_delay(mensaje)
 
     def transicion_a_juego(self):
         """Maneja la transición de la ventana de menú a la ventana de juego"""
@@ -143,13 +151,6 @@ class Cliente:
                         if event.type == pygame.QUIT:
                             self.running = False
                             break
-                        # Procesar otros eventos según la ventana actual
-                        if self.ventana_actual == "JUEGO":
-                            # Aquí puedes agregar el manejo de eventos específicos del juego
-                            if event.type == pygame.KEYDOWN and self.esperando_respuesta:
-                                if event.key == pygame.K_RETURN:
-                                    self.client_socket.sendall(b'')
-                                    self.esperando_respuesta = False
 
                     # Actualizar la pantalla según la ventana actual
                     if ventana_actual:
