@@ -34,19 +34,14 @@ class Cliente:
                     if mensaje:
                         # Función para reducir un mensaje repetido a una sola subcadena
                         def reducir_a_subcadena_unica(mensaje):
-                            # Buscar el primer punto como delimitador de subcadena
                             subcadena_delimitador = mensaje.split(".")[0] + "."
-                            # Verificar si el mensaje completo es una repetición de la subcadena
                             if mensaje == subcadena_delimitador * (len(mensaje) // len(subcadena_delimitador)):
                                 return subcadena_delimitador
                             return mensaje
 
-                        # Reducir el mensaje si es una repetición de la subcadena
                         mensaje = reducir_a_subcadena_unica(mensaje)
 
-                        # Verificar si el mensaje actual es diferente al último en la cola
-                        ultimo_mensaje = self.mensaje_queue.queue[-1] if not self.mensaje_queue.empty() else None
-                        if mensaje != ultimo_mensaje:
+                        if mensaje != self.ultimo_mensaje:
                             self.mensaje_queue.put(mensaje)
 
             except Exception as e:
@@ -66,40 +61,48 @@ class Cliente:
             self.tiempo_mensaje = time.time()
             time.sleep(3)
 
+    def mostrar_mensaje(self, mensaje):
+        """Muestra un mensaje en la pantalla"""
+        if mensaje != self.ultimo_mensaje:
+            if self.ventana_actual == "JUEGO" and self.juego:
+                self.juego.mostrar_mensaje(mensaje)
+
+            self.ultimo_mensaje = mensaje
+            self.tiempo_mensaje = time.time() 
+
     def procesar_mensajes(self):
         """Procesa los mensajes recibidos sin bloquear"""
-        while not self.mensaje_queue.empty():
-            mensaje = self.mensaje_queue.get()
-            
+        while not self.mensaje_queue.empty(): 
+            mensaje = self.mensaje_queue.get() 
+            print("Mensaje recibido:", mensaje)  # Debug
             # Verificar si el juego ha comenzado
             if "El juego ha comenzado" in mensaje:
                 self.mostrar_mensaje_con_delay(mensaje)
                 self.estado_actual = "JUGANDO"
                 self.esperando_inicio = False
                 self.transicion_a_juego()
-            else:
+            elif any(frase in mensaje for frase in ["se ha unido al juego.", "Bienvenido,", "Esperando más jugadores...", "ha abandonado el juego."]):
                 self.mostrar_mensaje_con_delay(mensaje)
-            
-            if "¿Desean iniciar el juego ahora? (si/no)" in mensaje:
+            elif "¿Desean iniciar el juego ahora? (si/no)" in mensaje:
                 self.estado_actual = "ESPERANDO_INICIO"
                 self.esperando_inicio = True
-            
-            if "Es tu turno" in mensaje:
+            elif "Es tu turno" in mensaje:
                 self.turno = True
                 self.esperando_respuesta = True
-                self.mostrar_mensaje_con_delay(mensaje)
+                self.mostrar_mensaje(mensaje)
             elif "Espera tu turno" in mensaje:
-                self.turno = False
+                self.mostrar_mensaje(mensaje)
+            elif "lanza" in mensaje:
+                self.mostrar_mensaje_con_delay(mensaje)
                 self.esperando_respuesta = False
-                self.mostrar_mensaje_con_delay(mensaje)
-                print(mensaje)
+                self.turno = False
             else:
-                self.mostrar_mensaje_con_delay(mensaje)
+                self.mostrar_mensaje(mensaje)
 
     def transicion_a_juego(self):
         """Maneja la transición de la ventana de menú a la ventana de juego"""
         print("Ejecutando transición a juego...")  # Debug
-        
+
         if self.menu:
             self.menu.close()
             self.menu = None
@@ -143,7 +146,6 @@ class Cliente:
             self.estado_actual = "ENTRADA_NOMBRE"
             self.nombre = self.entrada_texto_con_delay("Ingresa tu nombre: ", "unica", delay_antes=False)
             self.client_socket.sendall(self.nombre.encode('utf-8'))
-            self.estado_actual = "JUGANDO"
 
             # Bucle principal del juego
             while self.running:

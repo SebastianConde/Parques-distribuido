@@ -67,7 +67,7 @@ class Server:
                         else:
                             self.broadcast("Esperando más jugadores...")
                             time.sleep(10)
-                            client_socket.sendall("Desean iniciar el juego ahora? (si/no)".encode('utf-8'))
+                            client_socket.sendall("¿Desean iniciar el juego ahora? (si/no)".encode('utf-8'))
                             self.respuestas = []
                             self.recibir_respuestas(client_socket)
 
@@ -125,6 +125,8 @@ class Server:
                 else:
                     # El jugador no tiene su turno, se lo indica
                     client_socket.sendall("Espera tu turno.".encode('utf-8'))
+                    while self.parques.jugador_actual.nombre != socket_player_name:
+                        pass
 
 
     def start(self):
