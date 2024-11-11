@@ -32,8 +32,6 @@ class Cliente:
                 if self.client_socket:
                     mensaje = self.client_socket.recv(1024).decode('utf-8')
                     if mensaje:
-                        print(f"Mensaje recibido rec: {mensaje}")  # Debug
-
                         # Función para reducir un mensaje repetido a una sola subcadena
                         def reducir_a_subcadena_unica(mensaje):
                             # Buscar el primer punto como delimitador de subcadena
@@ -48,8 +46,6 @@ class Cliente:
 
                         # Verificar si el mensaje actual es diferente al último en la cola
                         ultimo_mensaje = self.mensaje_queue.queue[-1] if not self.mensaje_queue.empty() else None
-                        print(f"Último mensaje: {ultimo_mensaje}")  # Debug
-                        print(f"Mensaje actual: {mensaje}")  # Debug
                         if mensaje != ultimo_mensaje:
                             self.mensaje_queue.put(mensaje)
 
@@ -74,7 +70,6 @@ class Cliente:
         """Procesa los mensajes recibidos sin bloquear"""
         while not self.mensaje_queue.empty():
             mensaje = self.mensaje_queue.get()
-            print(f"Mensaje recibido: {mensaje}")  # Debug
             
             # Verificar si el juego ha comenzado
             if "El juego ha comenzado" in mensaje:
@@ -95,6 +90,7 @@ class Cliente:
                 self.mostrar_mensaje_con_delay(mensaje)
             elif "Espera tu turno" in mensaje:
                 self.turno = False
+                self.esperando_respuesta = False
                 self.mostrar_mensaje_con_delay(mensaje)
                 print(mensaje)
             else:
@@ -169,13 +165,12 @@ class Cliente:
                         if event.type == pygame.QUIT:
                             self.running = False
                             break
+                        if event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_RETURN and self.esperando_respuesta and self.turno:
+                                self.client_socket.sendall("dados".encode('utf-8'))
                     if self.ventana_actual == "JUEGO":
                         self.juego.actualizar_pantalla()
-                        
-
-                    # Actualizar la pantalla según la ventana actual
-                    if ventana_actual:
-                        pygame.display.flip()
+                    pygame.display.flip()
                 
                 # Control de FPS
                 pygame.time.Clock().tick(60)

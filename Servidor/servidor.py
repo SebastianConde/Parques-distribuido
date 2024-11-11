@@ -88,44 +88,43 @@ class Server:
             if nombre:
                 self.broadcast(f"{nombre} ha abandonado el juego.")
             time.sleep(3)
-            self.juego_iniciado = False
             self.clients = [(s, n) for s, n in self.clients if s != client_socket]
             client_socket.close()
+            self.juego_iniciado = False
 
 
     def manejar_turno(self, client_socket):
         """Lógica para manejar el turno de un jugador."""
         while not self.parques.ganador:
-            with self.lock:  
-                jugador = self.parques.jugador_actual
-                if jugador:
-                    current_player_name = jugador.nombre
-                    socket_player_name = self.get_player_name(client_socket)
-                    
-                    if current_player_name == socket_player_name:
-                        # Es el turno del jugador, le pedimos que presione Enter para lanzar los dados
-                        client_socket.sendall("Es tu turno. Lanza los dados".encode('utf-8'))
-                        respuesta = client_socket.recv(1024).decode('utf-8')
+            jugador = self.parques.jugador_actual
+            if jugador:
+                current_player_name = jugador.nombre
+                socket_player_name = self.get_player_name(client_socket)
+                
+                if current_player_name == socket_player_name:
+                    # Es el turno del jugador, le pedimos que presione Enter para lanzar los dados
+                    client_socket.sendall("Es tu turno. Lanza los dados".encode('utf-8'))
+                    respuesta = client_socket.recv(1024).decode('utf-8')
 
-                        if respuesta == "dados":
-                            # El jugador lanza los dados
-                            valor_dados = self.parques.lanzar_dados()
-                            self.parques.movimiento_fichas(sum(valor_dados))
-                            turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
-                            print(turn_message)
-                            self.broadcast(turn_message)
+                    if respuesta == "dados":
+                        # El jugador lanza los dados
+                        valor_dados = self.parques.lanzar_dados()
+                        self.parques.movimiento_fichas(sum(valor_dados))
+                        turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
+                        print(turn_message)
+                        self.broadcast(turn_message)
 
-                            if self.parques.ganador:
-                                # Si hay ganador, se informa y termina el juego
-                                winner_message = f"El ganador es {socket_player_name}!"
-                                self.broadcast(winner_message)
-                                break
+                        if self.parques.ganador:
+                            # Si hay ganador, se informa y termina el juego
+                            winner_message = f"El ganador es {socket_player_name}!"
+                            self.broadcast(winner_message)
+                            break
 
-                            # Cambiar de turno
-                            self.parques.cambiar_turno()
-                    else:
-                        # El jugador no tiene su turno, se lo indica
-                        client_socket.sendall("Espera tu turno.".encode('utf-8'))
+                        # Cambiar de turno
+                        self.parques.cambiar_turno()
+                else:
+                    # El jugador no tiene su turno, se lo indica
+                    client_socket.sendall("Espera tu turno.".encode('utf-8'))
 
 
     def start(self):
