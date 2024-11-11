@@ -91,9 +91,6 @@ class Cliente:
         self.juego = JuegoParques()
         self.ventana_actual = "JUEGO"
         
-        # Iniciar el bucle del juego
-        self.juego.correr_juego()
-        
     def enviar_respuesta(self, mensaje):
         """Envía la respuesta del jugador"""
         if self.client_socket:
@@ -151,6 +148,9 @@ class Cliente:
                         if event.type == pygame.QUIT:
                             self.running = False
                             break
+                    if self.ventana_actual == "JUEGO":
+                        self.juego.actualizar_pantalla()
+                        
 
                     # Actualizar la pantalla según la ventana actual
                     if ventana_actual:

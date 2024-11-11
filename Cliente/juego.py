@@ -74,8 +74,8 @@ class JuegoParques:
     def dibujar_mensaje(self):
         """Dibuja el mensaje actual en la pantalla"""
         if self.mensaje_actual:
-            mensaje_superficie = self.font_mensajes.render(self.mensaje_actual, True, (255, 255, 255))
-            mensaje_rect = mensaje_superficie.get_rect(center=(self.WIDTH // 2, 550))
+            mensaje_superficie = self.font_mensajes.render(self.mensaje_actual, True, (0, 0, 0))
+            mensaje_rect = mensaje_superficie.get_rect(center=(self.WIDTH // 2, self.HEIGHT // 2))
             self.window.blit(mensaje_superficie, mensaje_rect)
 
     def entrada_texto(self, mensaje, tipo):
@@ -121,36 +121,11 @@ class JuegoParques:
         self.dibujar_tablero()
         self.dibujar_jugadores()
         self.dibujar_fichas()
-        self.dibujar_seguros_iniciales()
-        self.dibujar_metas()
         self.dibujar_mensaje()
 
     def close(self):
         """Cierra la ventana del juego"""
         pygame.quit()
-
-    def correr_juego(self):
-        """Ejecuta el bucle principal del juego"""
-        print("Iniciando bucle del juego...")  # Debug
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    break
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        running = False
-                        break
-
-            # Actualizar el estado del juego
-            self.actualizar_pantalla()
-            
-            # Refrescar la pantalla
-            pygame.display.flip()
-            self.clock.tick(60)
-
-        print("Saliendo del bucle del juego...")  # Debug
 
 if __name__ == "__main__":
     juego = JuegoParques()
