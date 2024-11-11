@@ -55,6 +55,7 @@ class Server:
                         pass
                 elif len(self.clients) >= 2:
                     client_socket.sendall("¿Desean iniciar el juego ahora? (si/no)".encode('utf-8'))
+                    self.respuestas = []
                     self.recibir_respuestas(client_socket)
                     
                     while len(self.respuestas) < len(self.clients):
@@ -62,23 +63,23 @@ class Server:
                     if len(self.respuestas) == len(self.clients):
                         if all([r == 'si' for r in self.respuestas]) or len(self.clients) == 4:
                             self.juego_iniciado = True
-                            self.broadcast("El juego ha comenzado!")
+                            client_socket.sendall("El juego ha comenzado!".encode('utf-8'))
                         else:
                             self.broadcast("Esperando más jugadores...")
                             time.sleep(10)
-                            client_socket.sendall("¿Desean iniciar el juego ahora? (si/no)".encode('utf-8'))
+                            client_socket.sendall("Desean iniciar el juego ahora? (si/no)".encode('utf-8'))
+                            self.respuestas = []
                             self.recibir_respuestas(client_socket)
 
                             if all([r == 'si' for r in self.respuestas]) or len(self.clients) == 4:
                                 self.juego_iniciado = True
-                                self.broadcast("El juego ha comenzado!")
+                                client_socket.sendall("El juego ha comenzado!".encode('utf-8'))
                             else:
                                 self.juego_iniciado = True
-                                self.broadcast("El juego ha comenzado, con los jugadores actuales.")
+                                client_socket.sendall("El juego ha comenzado con los jugadores actuales.".encode('utf-8'))
 
             # Si el juego está iniciado, comienza el manejo de turnos
             if self.juego_iniciado:
-                print("Hilo", address, "manejando turnos")
                 self.manejar_turno(client_socket)
 
         except Exception as e:
@@ -97,14 +98,13 @@ class Server:
         while not self.parques.ganador:
             with self.lock:  
                 jugador = self.parques.jugador_actual
-                print("Soy el hilo", client_socket, "para mi el jugador actual es", jugador.nombre, " y mi nombre es", self.get_player_name(client_socket))
                 if jugador:
                     current_player_name = jugador.nombre
                     socket_player_name = self.get_player_name(client_socket)
                     
                     if current_player_name == socket_player_name:
                         # Es el turno del jugador, le pedimos que presione Enter para lanzar los dados
-                        client_socket.sendall("Es tu turno. Presiona Enter para lanzar los dados.".encode('utf-8'))
+                        client_socket.sendall("Es tu turno. Lanza los dados".encode('utf-8'))
                         respuesta = client_socket.recv(1024).decode('utf-8')
 
                         if respuesta == "dados":

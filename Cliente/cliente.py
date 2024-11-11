@@ -32,10 +32,30 @@ class Cliente:
                 if self.client_socket:
                     mensaje = self.client_socket.recv(1024).decode('utf-8')
                     if mensaje:
-                        self.mensaje_queue.put(mensaje)
-            except:
+                        print(f"Mensaje recibido rec: {mensaje}")  # Debug
+
+                        # Función para reducir un mensaje repetido a una sola subcadena
+                        def reducir_a_subcadena_unica(mensaje):
+                            # Buscar el primer punto como delimitador de subcadena
+                            subcadena_delimitador = mensaje.split(".")[0] + "."
+                            # Verificar si el mensaje completo es una repetición de la subcadena
+                            if mensaje == subcadena_delimitador * (len(mensaje) // len(subcadena_delimitador)):
+                                return subcadena_delimitador
+                            return mensaje
+
+                        # Reducir el mensaje si es una repetición de la subcadena
+                        mensaje = reducir_a_subcadena_unica(mensaje)
+
+                        # Verificar si el mensaje actual es diferente al último en la cola
+                        ultimo_mensaje = self.mensaje_queue.queue[-1] if not self.mensaje_queue.empty() else None
+                        print(f"Último mensaje: {ultimo_mensaje}")  # Debug
+                        print(f"Mensaje actual: {mensaje}")  # Debug
+                        if mensaje != ultimo_mensaje:
+                            self.mensaje_queue.put(mensaje)
+
+            except Exception as e:
                 if self.running:
-                    print("Error al recibir el mensaje.")
+                    print("Error al recibir el mensaje:", e)
                 break
 
     def mostrar_mensaje_con_delay(self, mensaje):
@@ -76,6 +96,7 @@ class Cliente:
             elif "Espera tu turno" in mensaje:
                 self.turno = False
                 self.mostrar_mensaje_con_delay(mensaje)
+                print(mensaje)
             else:
                 self.mostrar_mensaje_con_delay(mensaje)
 
