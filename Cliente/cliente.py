@@ -123,16 +123,16 @@ class Cliente:
                 self.mostrar_mensaje(mensaje)
             elif "lanza" in mensaje:
                 self.obtener_dados(mensaje)
-                if "no puede" in mensaje:
-                    self.esperando_respuesta = True
-                    self.turno = True
-                else:
-                    self.esperando_respuesta = False
+                if "ha salido de la cárcel" in mensaje:
                     self.turno = False
-            elif "ha salido de la cárcel." in mensaje or "no ha podido salir de la cárcel." in mensaje:
+                    self.esperando_respuesta = False
+                elif "y no ha podido salir de la cárcel" in mensaje:
+                    self.turno = True
+                    self.esperando_respuesta = True
+            elif "no ha podido salir de la cárcel." in mensaje:
                 self.mostrar_mensaje_con_delay(mensaje)
-                self.esperando_respuesta = False
                 self.turno = False
+                self.esperando_respuesta = False
             elif "Lo sentimos, hay un juego en curso." in mensaje:
                 self.mostrar_mensaje_con_delay(mensaje)
                 self.estado_actual = "MENU"
@@ -149,6 +149,13 @@ class Cliente:
             self.mensaje_dados = mensaje
             self.tiempo_dados = time.time()
             self.dados_actualizados = True
+
+        if self.dado1 == self.dado2:
+            self.esperando_respuesta = True
+            self.turno = True
+        else:
+            self.esperando_respuesta = False
+            self.turno = False
 
     def transicion_a_juego(self):
         """Maneja la transición de la ventana de menú a la ventana de juego"""
