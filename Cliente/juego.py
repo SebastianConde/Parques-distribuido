@@ -3,25 +3,57 @@ import sys
 import MapeoTablero as MP
 
 class JuegoParques:
-    def __init__(self):
+    def __init__(self, jugadores):
         pygame.init()
-        self.WIDTH, self.HEIGHT = 700, 700
+        self.WIDTH, self.HEIGHT = 900, 700
         self.window = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
         pygame.display.set_caption("Parqués")
         
         # Cargar y escalar imágenes
-        self.tablero = pygame.transform.scale(pygame.image.load("images/tablero.jpeg"), (self.WIDTH, self.HEIGHT))
+        self.tablero = pygame.transform.scale(pygame.image.load("images/tablero.jpeg"), (self.WIDTH-200, self.HEIGHT))
         self.ficha_roja = pygame.transform.scale(pygame.image.load("images/ficha_roja.png"), (20, 20))
         self.ficha_amarilla = pygame.transform.scale(pygame.image.load("images/ficha_amarilla.png"), (20, 20))
         self.ficha_verde = pygame.transform.scale(pygame.image.load("images/ficha_verde.png"), (20, 20))
         self.ficha_azul = pygame.transform.scale(pygame.image.load("images/ficha_azul.png"), (20, 20))
 
-        self.jugadores = {
-            "Jugador1": {"nombre": "Jugador 1", "color": (244, 110, 110), "pos": MP.carceles["ROJA"]},
-            "Jugador2": {"nombre": "Jugador 2", "color": (255, 255, 255), "pos": MP.carceles["AMARILLA"]},
-            "Jugador3": {"nombre": "Jugador 3", "color": (0, 0, 255), "pos": MP.carceles["AZUL"]},
-            "Jugador4": {"nombre": "Jugador 4", "color": (0, 255, 0), "pos": MP.carceles["VERDE"]}
+        # Cargar imagenes de los dados
+        self.dado ={
+            1: pygame.transform.scale(pygame.image.load("images/1_dot.png"), (90, 90)),
+            2: pygame.transform.scale(pygame.image.load("images/2_dots.png"), (90, 90)),
+            3: pygame.transform.scale(pygame.image.load("images/3_dots.png"), (90, 90)),
+            4: pygame.transform.scale(pygame.image.load("images/4_dots.png"), (90, 90)),
+            5: pygame.transform.scale(pygame.image.load("images/5_dots.png"), (90, 90)),
+            6: pygame.transform.scale(pygame.image.load("images/6_dots.png"), (90, 90))
         }
+        
+        self.jugadores = {}
+
+        # Mapeo de colores numéricos a valores RGB y nombres de posiciones
+        colores = {
+            "1": (244, 110, 110),      # Rojo
+            "2": (255, 255, 255),      # Amarillo
+            "3": (0, 0, 255),          # Azul
+            "4": (0, 255, 0)           # Verde
+        }
+
+        # Lista de posiciones asociadas a cada color
+        posiciones = {
+            "1": MP.carceles["ROJA"],
+            "2": MP.carceles["AMARILLA"],
+            "3": MP.carceles["AZUL"],
+            "4": MP.carceles["VERDE"]
+        }
+
+        # Asignar nombre y color a cada jugador
+        for i, (nombre, color_num) in enumerate(jugadores, start=1):
+            color_rgb = colores.get(color_num, (0, 0, 0))  # Asigna un color por defecto si no coincide
+            pos = posiciones.get(color_num, None)          # Asigna None si no coincide
+            
+            self.jugadores[f"Jugador{i}"] = {
+                "nombre": nombre,
+                "color": color_rgb,
+                "pos": pos
+            }
 
         self.num_fichas = 4
         self.font = pygame.font.Font(None, 36)
@@ -30,20 +62,18 @@ class JuegoParques:
         
         # Nuevas variables para manejo de mensajes y entrada de texto
         self.mensaje_actual = ""
+        self.mensaje_dados = ""
+        self.tiempo_mensaje_dados = 0
         self.tiempo_mensaje = 0
-        self.input_text = ""
-        self.input_active = False
-        self.input_rect = pygame.Rect(10, self.HEIGHT - 40, 680, 30)
-        self.input_type = None
-        self.input_callback = None
 
     def dibujar_tablero(self):
         self.window.blit(self.tablero, (0, 0))
+        pygame.draw.rect(self.window, (192, 192, 192), (700, 0, 200, 700))
 
     def dibujar_jugadores(self):
-        for jugador, datos in self.jugadores.items():
-            texto = self.font.render(datos["nombre"], True, datos["color"])
-            self.window.blit(texto, (datos["pos"][0] + 10, datos["pos"][1] + 10))
+        for datos in self.jugadores.values():
+            texto = self.font.render(datos["nombre"], True, datos["color"])  # Renderiza el nombre con el color del jugador
+            self.window.blit(texto, (datos["pos"][0] + 10, datos["pos"][1] + 10))  # Dibuja el texto en la posición del jugador con un offset
 
     def dibujar_fichas(self):
         for i in range(self.num_fichas):
@@ -71,57 +101,90 @@ class JuegoParques:
         self.mensaje_actual = mensaje
         self.tiempo_mensaje = pygame.time.get_ticks()
 
-    def dibujar_mensaje(self):
-        """Dibuja el mensaje actual en la pantalla"""
+    def mostrar_mensaje_dados(self, mensaje):
+        """Actualiza el mensaje actual y el tiempo de visualización"""
+        self.mensaje_dados = mensaje
+        self.tiempo_mensaje_dados = pygame.time.get_ticks()
+
+    def dibujar_mensaje(self, y):
+        """Dibuja el mensaje actual en el panel lateral con salto de línea automático"""
         if self.mensaje_actual:
-            mensaje_superficie = self.font_mensajes.render(self.mensaje_actual, True, (0, 0, 0))
-            mensaje_rect = mensaje_superficie.get_rect(center=(self.WIDTH // 2, self.HEIGHT // 2))
-            self.window.blit(mensaje_superficie, mensaje_rect)
-
-    def entrada_texto(self, mensaje, tipo):
-        """Maneja la entrada de texto del usuario"""
-        self.input_active = True
-        self.input_text = ""
-        self.input_type = tipo
-        self.mostrar_mensaje(mensaje)
-
-        while self.input_active:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN:
-                        if self.input_type == "condicional":
-                            if self.input_text.lower() in ['si', 'no']:
-                                self.input_active = False
-                                return self.input_text
-                        else:
-                            self.input_active = False
-                            return self.input_text
-                    elif event.key == pygame.K_BACKSPACE:
-                        self.input_text = self.input_text[:-1]
-                    else:
-                        self.input_text += event.unicode
-
-            # Actualizar pantalla
-            self.actualizar_pantalla()
-
-            # Dibujar entrada de texto
-            pygame.draw.rect(self.window, (255, 255, 255), self.input_rect, 2)
-            text_surface = self.font.render(self.input_text, True, (255, 255, 255))
-            self.window.blit(text_surface, (self.input_rect.x + 5, self.input_rect.y + 5))
+            palabras = self.mensaje_actual.split()
+            lineas = []
+            linea_actual = []
+            ancho_actual = 0
             
-            pygame.display.flip()
-            self.clock.tick(60)
+            # Procesar cada palabra
+            for palabra in palabras:
+                # Obtener el ancho de la palabra con el espacio
+                palabra_surface = self.font_mensajes.render(palabra + " ", True, (0, 0, 0))
+                ancho_palabra = palabra_surface.get_width()
+                
+                # Si agregar la palabra excede el ancho máximo, comenzar nueva línea
+                if ancho_actual + ancho_palabra > 190:  # 190 para dejar un pequeño margen
+                    lineas.append(" ".join(linea_actual)) 
+                    linea_actual = [palabra] 
+                    ancho_actual = ancho_palabra
+                else:
+                    linea_actual.append(palabra)
+                    ancho_actual += ancho_palabra
+            
+            # Agregar la última línea si existe
+            if linea_actual:
+                lineas.append(" ".join(linea_actual))
+            
+            # Dibujar cada línea
+            for linea in lineas:
+                mensaje_surface = self.font_mensajes.render(linea, True, (0, 0, 0))
+                self.window.blit(mensaje_surface, (705, y))
+                y += self.font_mensajes.get_linesize()  # Aumentar y por el alto de la línea
+
+    def dibujar_mensaje_dados(self, y):
+        # Dibuja el mensaje de los dados si existe
+        if self.mensaje_dados:
+            palabras = self.mensaje_dados.split()
+            lineas = []
+            linea_actual = []
+            ancho_actual = 0
+            
+            # Procesar cada palabra
+            for palabra in palabras:
+                # Obtener el ancho de la palabra con el espacio
+                palabra_surface = self.font_mensajes.render(palabra + " ", True, (0, 0, 0))
+                ancho_palabra = palabra_surface.get_width()
+                
+                # Si agregar la palabra excede el ancho máximo, comenzar nueva línea
+                if ancho_actual + ancho_palabra > 190:  # 190 para dejar un pequeño margen
+                    lineas.append(" ".join(linea_actual)) 
+                    linea_actual = [palabra] 
+                    ancho_actual = ancho_palabra
+                else:
+                    linea_actual.append(palabra)
+                    ancho_actual += ancho_palabra
+            
+            # Agregar la última línea si existe
+            if linea_actual:
+                lineas.append(" ".join(linea_actual))
+            
+            # Dibujar cada línea
+            for linea in lineas:
+                mensaje_surface = self.font_mensajes.render(linea, True, (0, 0, 0))
+                self.window.blit(mensaje_surface, (705, y))
+                y += self.font_mensajes.get_linesize()  # Aumentar y por el alto de la línea
+
+    def dibujar_dados(self, dado1, dado2):
+        """Dibuja los dados en la pantalla y muestra el mensaje"""
+        self.dibujar_mensaje_dados(90)
+
+        self.window.blit(self.dado[dado1], (705, 500))
+        self.window.blit(self.dado[dado2], (805, 500))
 
     def actualizar_pantalla(self):
         """Actualiza todos los elementos en la pantalla"""
         self.dibujar_tablero()
         self.dibujar_jugadores()
         self.dibujar_fichas()
-        self.dibujar_mensaje()
+        self.dibujar_mensaje(30)
 
     def close(self):
         """Cierra la ventana del juego"""

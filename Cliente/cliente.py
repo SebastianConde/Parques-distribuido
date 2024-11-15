@@ -22,8 +22,15 @@ class Cliente:
         self.esperando_inicio = False
         self.estado_actual = "MENU"  # Estados: MENU, ENTRADA_NOMBRE, JUGANDO, ESPERANDO_INICIO
         self.ultimo_mensaje = None
+        self.ultimo_mensaje_dados = None
         self.tiempo_mensaje = 0
         self.ventana_actual = "MENU"  # Estados: MENU, JUEGO
+        self.jugadores = []
+        self.dado1 = 0
+        self.dado2 = 0
+        self.mensaje_dados = None
+        self.tiempo_dados = None
+        self.dados_actualizados = False
 
     def recibir_mensajes(self):
         """Thread worker para recibir mensajes del servidor"""
@@ -64,11 +71,31 @@ class Cliente:
     def mostrar_mensaje(self, mensaje):
         """Muestra un mensaje en la pantalla"""
         if mensaje != self.ultimo_mensaje:
+            if "lanza" in mensaje and "dados" in mensaje.lower():
+                self.mensaje_dados = mensaje
+                return
             if self.ventana_actual == "JUEGO" and self.juego:
                 self.juego.mostrar_mensaje(mensaje)
 
             self.ultimo_mensaje = mensaje
             self.tiempo_mensaje = time.time() 
+
+    def actualizar_dados_y_mensaje(self):
+        """Actualiza los dados y su mensaje de forma sincronizada"""
+        if self.dados_actualizados and self.mensaje_dados:
+            # Esperamos un pequeño momento para que los dados se actualicen visualmente
+            if time.time() - self.tiempo_dados >= 0.1:  # 100ms de delay
+                if self.ventana_actual == "JUEGO" and self.juego:
+                    self.juego.mostrar_mensaje_dados(self.mensaje_dados)
+                    self.ultimo_mensaje_dados = self.mensaje_dados
+                    self.tiempo_dados = time.time()
+                self.mensaje_dados = None
+                self.dados_actualizados = False
+
+    def separar_jugadores(self, mensaje):
+        """Extrae los nombres y colores de los jugadores del mensaje"""
+        jugadores = mensaje.split(":")[1].split(", ")
+        self.jugadores = [(j.split()[0], j.split()[1]) for j in jugadores]
 
     def procesar_mensajes(self):
         """Procesa los mensajes recibidos sin bloquear"""
@@ -81,6 +108,8 @@ class Cliente:
                 self.estado_actual = "JUGANDO"
                 self.esperando_inicio = False
                 self.transicion_a_juego()
+            elif "Los jugadores son:" in mensaje:
+                self.separar_jugadores(mensaje)
             elif any(frase in mensaje for frase in ["se ha unido al juego.", "Bienvenido,", "Esperando más jugadores...", "ha abandonado el juego."]):
                 self.mostrar_mensaje_con_delay(mensaje)
             elif "¿Desean iniciar el juego ahora? (si/no)" in mensaje:
@@ -93,11 +122,22 @@ class Cliente:
             elif "Espera tu turno" in mensaje:
                 self.mostrar_mensaje(mensaje)
             elif "lanza" in mensaje:
-                self.mostrar_mensaje_con_delay(mensaje)
+                self.obtener_dados(mensaje)
                 self.esperando_respuesta = False
                 self.turno = False
             else:
                 self.mostrar_mensaje(mensaje)
+
+    def obtener_dados(self, mensaje):
+        partes = mensaje.split("(")
+        if len(partes) > 1:
+            valores_dados = partes[1].split(")")[0]  
+            dado1, dado2 = map(int, valores_dados.split(","))
+            self.dado1 = dado1
+            self.dado2 = dado2
+            self.mensaje_dados = mensaje
+            self.tiempo_dados = time.time()
+            self.dados_actualizados = True
 
     def transicion_a_juego(self):
         """Maneja la transición de la ventana de menú a la ventana de juego"""
@@ -108,7 +148,7 @@ class Cliente:
             self.menu = None
         
         # Inicializar la ventana de juego
-        self.juego = JuegoParques()
+        self.juego = JuegoParques(self.jugadores)
         self.ventana_actual = "JUEGO"
         
     def enviar_respuesta(self, mensaje):
@@ -151,6 +191,8 @@ class Cliente:
             while self.running:
                 # Procesar mensajes pendientes
                 self.procesar_mensajes()
+                # Actualizar dados y mensaje de forma sincronizada
+                self.actualizar_dados_y_mensaje()
 
                 # Manejar estados específicos
                 if self.estado_actual == "ESPERANDO_INICIO" and self.esperando_inicio:
@@ -167,11 +209,16 @@ class Cliente:
                         if event.type == pygame.QUIT:
                             self.running = False
                             break
-                        if event.type == pygame.KEYDOWN:
-                            if event.key == pygame.K_RETURN and self.esperando_respuesta and self.turno:
-                                self.client_socket.sendall("dados".encode('utf-8'))
+                        if event.type == pygame.MOUSEBUTTONDOWN: 
+                            if 700 <= event.pos[0] <= 900 and 500 <= event.pos[1] <= 700:
+                                if self.esperando_respuesta and self.turno:
+                                    self.client_socket.sendall("dados".encode('utf-8'))
                     if self.ventana_actual == "JUEGO":
                         self.juego.actualizar_pantalla()
+                        if self.dado1 and self.dado2:
+                            self.juego.dibujar_dados(self.dado1, self.dado2)
+                        else:
+                            self.juego.dibujar_dados(6, 6)
                     pygame.display.flip()
                 
                 # Control de FPS

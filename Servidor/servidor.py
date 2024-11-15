@@ -2,26 +2,83 @@ import socket
 import threading
 from parques import Parques
 import time
+import queue
 
 class Server:
     def __init__(self, host='127.0.0.1', port=65432):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind((host, port))
         self.server.listen(4)
+        self.reset_game_state()
+        self.lock = threading.Lock()
+
+    def reset_game_state(self):
+        """Reinicia todos los estados del juego"""
         self.clients = []  # Lista de tuplas (socket, nombre)
         self.parques = Parques()
-        self.lock = threading.Lock()
         self.juego_iniciado = False
         self.respuestas = []
+        self.jugadores = []
+        self.message_queues = {}  # Diccionario para almacenar colas de mensajes por cliente
 
     def broadcast(self, message, exclude_socket=None):
         for client_socket, _ in self.clients:
             if client_socket != exclude_socket:
                 try:
-                    print(f"Enviando mensaje a {client_socket.getpeername()}: {message}")
-                    client_socket.sendall(message.encode('utf-8'))
+                    if client_socket not in self.message_queues:
+                        self.message_queues[client_socket] = queue.Queue()
+                    self.message_queues[client_socket].put(message)
+                    time.sleep(0.1)
+                    print(f"Encolando mensaje para {client_socket.getpeername()}: {message}")
+                    self.send_queued_messages(client_socket)
                 except:
-                    self.clients.remove((client_socket, _))
+                    self.handle_disconnect(client_socket)
+
+    def handle_disconnect(self, client_socket):
+        """Maneja la desconexión de un cliente"""
+        with self.lock:
+            nombre = self.get_player_name(client_socket)
+            if nombre:
+                print(f"Desconectando a {nombre}")
+                self.broadcast(f"{nombre} ha abandonado el juego.")
+                self.clients = [(s, n) for s, n in self.clients if s != client_socket]
+                self.jugadores = [(n, c) for n, c in self.jugadores if n != nombre]
+                self.message_queues.pop(client_socket, None)
+                
+                try:
+                    client_socket.close()
+                except:
+                    pass
+
+                # Si no quedan jugadores o solo queda uno, reiniciar el juego
+                if len(self.clients) < 2:
+                    print("Reiniciando estado del juego por falta de jugadores")
+                    self.reset_game_state()
+                    if len(self.clients) == 1:
+                        remaining_socket, _ = self.clients[0]
+                        self.send_message(remaining_socket, "Esperando más jugadores...")
+    
+    def send_queued_messages(self, client_socket):
+        """Envía los mensajes encolados para un cliente específico"""
+        if client_socket in self.message_queues:
+            try:
+                while not self.message_queues[client_socket].empty():
+                    message = self.message_queues[client_socket].get()
+                    client_socket.sendall(message.encode('utf-8'))
+                    time.sleep(0.2)  # Pausa entre envíos de mensajes
+            except Exception as e:
+                print(f"Error enviando mensajes encolados: {e}")
+    
+    def send_message(self, client_socket, message):
+        """Envía un mensaje a un cliente específico usando la cola"""
+        try:
+            if client_socket not in self.message_queues:
+                self.message_queues[client_socket] = queue.Queue()
+            self.message_queues[client_socket].put(message)
+            time.sleep(0.1)  # Pequeña pausa antes de enviar
+            self.send_queued_messages(client_socket)
+        except Exception as e:
+            print(f"Error enviando mensaje: {e}")
 
     def recibir_respuestas(self, client_socket):
         respuesta = client_socket.recv(1024).decode('utf-8')
@@ -37,64 +94,59 @@ class Server:
     def handle_client(self, client_socket, address):
         try:
             nombre = client_socket.recv(1024).decode('utf-8')
-            self.broadcast(f"{nombre} se ha unido al juego.", client_socket)
             with self.lock:
+                # Verificar si es el primer jugador después de un reinicio
+                if len(self.clients) == 0:
+                    self.reset_game_state()
+                
                 self.clients.append((client_socket, nombre))
                 color = len(self.clients)
                 self.parques.agregar_jugador(nombre, color)
+                self.jugadores.append((nombre, color))
+                
                 if len(self.clients) == 1:
                     self.parques.iniciar(self.parques.jugadores[0])
+                    self.send_message(client_socket, f"Bienvenido, {nombre}!")
+                    self.send_message(client_socket, "Esperando más jugadores...")
+                else:
+                    self.broadcast(f"{nombre} se ha unido al juego.", client_socket)
+                    self.send_message(client_socket, f"Bienvenido, {nombre}!")
 
-            welcome_msg = f"Bienvenido, {nombre}!"
-            client_socket.sendall(welcome_msg.encode('utf-8'))
-
-            while not self.juego_iniciado:
+            while not self.juego_iniciado and client_socket in [s for s, _ in self.clients]:
                 if len(self.clients) == 1:
-                    client_socket.sendall("Esperando más jugadores...".encode('utf-8'))
-                    while len(self.clients) < 2:
-                        pass
+                    time.sleep(1)
+                    continue
                 elif len(self.clients) >= 2:
-                    client_socket.sendall("¿Desean iniciar el juego ahora? (si/no)".encode('utf-8'))
-                    self.respuestas = []
-                    self.recibir_respuestas(client_socket)
-                    
-                    while len(self.respuestas) < len(self.clients):
-                        pass
-                    if len(self.respuestas) == len(self.clients):
+                    self.send_message(client_socket, "¿Desean iniciar el juego ahora? (si/no)")
+                    try:
+                        self.respuestas = []
+                        self.recibir_respuestas(client_socket)
+                        
+                        while len(self.respuestas) < len(self.clients):
+                            time.sleep(0.5)
+                        
                         if all([r == 'si' for r in self.respuestas]) or len(self.clients) == 4:
                             self.juego_iniciado = True
-                            client_socket.sendall("El juego ha comenzado!".encode('utf-8'))
+                            jugadores = "Los jugadores son: " + ", ".join([f"{nombre} {color}" for nombre, color in self.jugadores])
+                            self.broadcast(jugadores)
+                            self.broadcast("El juego ha comenzado!")
+                            break
                         else:
-                            self.broadcast("Esperando más jugadores...")
+                            self.send_message(client_socket, "Esperando más jugadores...")
                             time.sleep(10)
-                            client_socket.sendall("¿Desean iniciar el juego ahora? (si/no)".encode('utf-8'))
-                            self.respuestas = []
-                            self.recibir_respuestas(client_socket)
+                    except:
+                        self.handle_disconnect(client_socket)
+                        return
 
-                            if all([r == 'si' for r in self.respuestas]) or len(self.clients) == 4:
-                                self.juego_iniciado = True
-                                client_socket.sendall("El juego ha comenzado!".encode('utf-8'))
-                            else:
-                                self.juego_iniciado = True
-                                client_socket.sendall("El juego ha comenzado con los jugadores actuales.".encode('utf-8'))
-
-            # Si el juego está iniciado, comienza el manejo de turnos
             if self.juego_iniciado:
                 self.manejar_turno(client_socket)
 
         except Exception as e:
             print(f"Error al manejar al cliente {address}: {str(e)}")
-            nombre = self.get_player_name(client_socket)
-            if nombre:
-                self.broadcast(f"{nombre} ha abandonado el juego.")
-            time.sleep(3)
-            self.clients = [(s, n) for s, n in self.clients if s != client_socket]
-            client_socket.close()
-            self.juego_iniciado = False
+            self.handle_disconnect(client_socket)
 
 
     def manejar_turno(self, client_socket):
-        """Lógica para manejar el turno de un jugador."""
         while not self.parques.ganador:
             jugador = self.parques.jugador_actual
             if jugador:
@@ -102,40 +154,42 @@ class Server:
                 socket_player_name = self.get_player_name(client_socket)
                 
                 if current_player_name == socket_player_name:
-                    # Es el turno del jugador, le pedimos que presione Enter para lanzar los dados
-                    client_socket.sendall("Es tu turno. Lanza los dados".encode('utf-8'))
+                    time.sleep(0.2)  # Pausa antes de anunciar turno
+                    self.send_message(client_socket, "Es tu turno. Lanza los dados")
                     respuesta = client_socket.recv(1024).decode('utf-8')
 
                     if respuesta == "dados":
-                        # El jugador lanza los dados
                         valor_dados = self.parques.lanzar_dados()
                         self.parques.movimiento_fichas(sum(valor_dados))
                         turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
-                        print(turn_message)
+                        time.sleep(0.2)  # Pausa antes de anunciar resultado
                         self.broadcast(turn_message)
 
                         if self.parques.ganador:
-                            # Si hay ganador, se informa y termina el juego
+                            time.sleep(0.3)  # Pausa más larga antes de anunciar ganador
                             winner_message = f"El ganador es {socket_player_name}!"
                             self.broadcast(winner_message)
                             break
 
-                        # Cambiar de turno
                         self.parques.cambiar_turno()
                 else:
-                    # El jugador no tiene su turno, se lo indica
-                    client_socket.sendall("Espera tu turno.".encode('utf-8'))
+                    time.sleep(0.2)  # Pausa antes de mensaje de espera
+                    self.send_message(client_socket, "Espera tu turno.")
                     while self.parques.jugador_actual.nombre != socket_player_name:
-                        pass
+                        time.sleep(0.5)  # Reducir la frecuencia de verificación
 
 
     def start(self):
         print("Servidor iniciado. Esperando jugadores...")
-        while len(self.clients) < 4:
-            client_socket, address = self.server.accept()
-            print(f"Jugador conectado desde {address}")
-            thread = threading.Thread(target=self.handle_client, args=(client_socket, address))
-            thread.start()
+        while True:
+            try:
+                client_socket, address = self.server.accept()
+                print(f"Jugador conectado desde {address}")
+                thread = threading.Thread(target=self.handle_client, args=(client_socket, address))
+                thread.start()
+            except Exception as e:
+                print(f"Error en la conexión: {str(e)}")
+                continue
 
 if __name__ == "__main__":
     server = Server()
