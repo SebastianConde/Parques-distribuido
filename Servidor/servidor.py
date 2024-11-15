@@ -93,6 +93,11 @@ class Server:
 
     def handle_client(self, client_socket, address):
         try:
+            if self.juego_iniciado:
+                mensaje = "Lo sentimos, hay un juego en curso."
+                self.send_message(client_socket, mensaje)
+                client_socket.close()
+                return 
             nombre = client_socket.recv(1024).decode('utf-8')
             with self.lock:
                 # Verificar si es el primer jugador después de un reinicio
@@ -154,24 +159,60 @@ class Server:
                 socket_player_name = self.get_player_name(client_socket)
                 
                 if current_player_name == socket_player_name:
-                    time.sleep(0.2)  # Pausa antes de anunciar turno
-                    self.send_message(client_socket, "Es tu turno. Lanza los dados")
-                    respuesta = client_socket.recv(1024).decode('utf-8')
+                    if jugador.en_carcel:
+                        for _ in range(3):
+                            time.sleep(0.2)
+                            self.send_message(client_socket, "Es tu turno. Lanza los dados. Tienes 3 intentos para salir de la carcél.")
+                            respuesta = client_socket.recv(1024).decode('utf-8')
+                            if respuesta == "dados":
+                                valor_dados = self.parques.lanzar_dados()
+                                turn_message = f"{socket_player_name} lanza {valor_dados} y no puede mover sus fichas."
+                                time.sleep(0.2)  # Pausa antes de anunciar resultado
+                                self.broadcast(turn_message)
+                                if self.parques.dados.es_par:
+                                    for ficha in jugador.fichas:
+                                        self.parques.tablero.salir_de_carcel(ficha)
+                                    jugador.en_carcel = False
+                                    turn_message = f"{socket_player_name} ha salido de la cárcel."
+                                    time.sleep(0.2)
+                                    self.broadcast(turn_message)
+                                    break
+                        if not self.parques.dados.es_par:
+                            turn_message = f"{socket_player_name} no ha podido salir de la cárcel."
+                            time.sleep(0.2)
+                            self.broadcast(turn_message)
+                            self.parques.cambiar_turno()
+                            continue
+                    else:
+                        time.sleep(0.2)  # Pausa antes de anunciar turno
+                        self.send_message(client_socket, "Es tu turno. Lanza los dados")
+                        respuesta = client_socket.recv(1024).decode('utf-8')
 
-                    if respuesta == "dados":
-                        valor_dados = self.parques.lanzar_dados()
-                        self.parques.movimiento_fichas(sum(valor_dados))
-                        turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
-                        time.sleep(0.2)  # Pausa antes de anunciar resultado
-                        self.broadcast(turn_message)
+                        if respuesta == "dados":
+                            valor_dados = self.parques.lanzar_dados()
+                            turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
+                            time.sleep(0.2)  # Pausa antes de anunciar resultado
+                            self.broadcast(turn_message)
+                            if self.parques.dados.es_par:
+                                jugador.pares_consecutivos += 1
+                                if jugador.pares_consecutivos == 3:
+                                    # Agregar lógica para sacar una ficha
+                                    jugador.pares_consecutivos = 0
+                                    self.parques.cambiar_turno()
+                                else:
+                                    self.parques.movimiento_fichas(sum(valor_dados))
+                            else:
+                                jugador.pares_consecutivos = 0
+                                self.parques.movimiento_fichas(sum(valor_dados))
+                                self.parques.cambiar_turno()
 
-                        if self.parques.ganador:
-                            time.sleep(0.3)  # Pausa más larga antes de anunciar ganador
-                            winner_message = f"El ganador es {socket_player_name}!"
-                            self.broadcast(winner_message)
-                            break
+                            if self.parques.ganador:
+                                time.sleep(0.3)  # Pausa más larga antes de anunciar ganador
+                                winner_message = f"El ganador es {socket_player_name}!"
+                                self.broadcast(winner_message)
+                                break
 
-                        self.parques.cambiar_turno()
+                            self.parques.cambiar_turno()
                 else:
                     time.sleep(0.2)  # Pausa antes de mensaje de espera
                     self.send_message(client_socket, "Espera tu turno.")

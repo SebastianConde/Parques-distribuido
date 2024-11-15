@@ -174,7 +174,7 @@ class JuegoParques:
 
     def dibujar_dados(self, dado1, dado2):
         """Dibuja los dados en la pantalla y muestra el mensaje"""
-        self.dibujar_mensaje_dados(90)
+        self.dibujar_mensaje_dados(120)
 
         self.window.blit(self.dado[dado1], (705, 500))
         self.window.blit(self.dado[dado2], (805, 500))

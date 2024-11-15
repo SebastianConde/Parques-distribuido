@@ -123,8 +123,19 @@ class Cliente:
                 self.mostrar_mensaje(mensaje)
             elif "lanza" in mensaje:
                 self.obtener_dados(mensaje)
+                if "no puede" in mensaje:
+                    self.esperando_respuesta = True
+                    self.turno = True
+                else:
+                    self.esperando_respuesta = False
+                    self.turno = False
+            elif "ha salido de la cárcel." in mensaje or "no ha podido salir de la cárcel." in mensaje:
+                self.mostrar_mensaje_con_delay(mensaje)
                 self.esperando_respuesta = False
                 self.turno = False
+            elif "Lo sentimos, hay un juego en curso." in mensaje:
+                self.mostrar_mensaje_con_delay(mensaje)
+                self.estado_actual = "MENU"
             else:
                 self.mostrar_mensaje(mensaje)
 
