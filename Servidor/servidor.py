@@ -20,6 +20,7 @@ class Server:
         self.respuestas = []
         self.jugadores = []
         self.message_queues = {}  # Diccionario para almacenar colas de mensajes por cliente
+        self.player_colors_and_positions = {}  # Diccionario para almacenar colores y posiciones de los jugadores
 
     def broadcast(self, message, exclude_socket=None):
         for client_socket, _ in self.clients:
@@ -108,6 +109,8 @@ class Server:
                 color = len(self.clients)
                 self.parques.agregar_jugador(nombre, color)
                 self.jugadores.append((nombre, color))
+                self.player_colors_and_positions[nombre] = (color, [-1, -1, -1, -1])
+                self.send_message(client_socket, f"color:{self.player_colors_and_positions[self.get_player_name(client_socket)][0]}")
                 
                 if len(self.clients) == 1:
                     self.parques.iniciar(self.parques.jugadores[0])
@@ -133,7 +136,7 @@ class Server:
                         if all([r == 'si' for r in self.respuestas]) or len(self.clients) == 4:
                             self.juego_iniciado = True
                             jugadores = "Los jugadores son: " + ", ".join([f"{nombre} {color}" for nombre, color in self.jugadores])
-                            self.broadcast(jugadores)
+                            self.broadcast(jugadores, client_socket)
                             self.broadcast("El juego ha comenzado!")
                             break
                         else:
@@ -173,11 +176,21 @@ class Server:
                                     turn_message = f"{socket_player_name} lanza {valor_dados} y ha salido de la cárcel."
                                     time.sleep(0.2)  # Pausa antes de anunciar resultado
                                     self.broadcast(turn_message)
+                                    color, posiciones = self.player_colors_and_positions[socket_player_name]
+                                    posiciones = [0, 0, 0, 0]
+                                    self.player_colors_and_positions[socket_player_name] = (color, posiciones)
+                                    initial_positions_message = "Posiciones iniciales: "
+                                    for nombre, (color, posiciones) in self.player_colors_and_positions.items():
+                                        initial_positions_message += f"{nombre}.{color}.{posiciones};"
+                                    time.sleep(0.2)  # Pausa antes de enviar posiciones iniciales
+                                    self.broadcast(initial_positions_message)
                                     break
                                 else:
                                     turn_message = f"{socket_player_name} lanza {valor_dados} y no ha podido salir de la cárcel."
                                     time.sleep(0.2)  # Pausa antes de anunciar resultado
                                     self.broadcast(turn_message)
+                        self.send_message(client_socket, "Espera tu turno.")
+                        time.sleep(0.2)  # Pausa antes de cambiar de turno
                         if not self.parques.dados.es_par:
                             turn_message = f"{socket_player_name} no ha podido salir de la cárcel."
                             time.sleep(0.2)
@@ -198,12 +211,18 @@ class Server:
                                     jugador.pares_consecutivos = 0
                                     self.parques.cambiar_turno()
                                 else:
-                                    self.parques.movimiento_fichas(sum(valor_dados))
+                                    #Solicitar que fichas se movieron y con que valor
+                                    self.send_message(client_socket, "Dame las fichas")
+                                    time.sleep(0.2)
+                                    respuesta = client_socket.recv(1024).decode('utf-8')
+                                    if respuesta:
+                                        pass
+                                    #self.parques.movimiento_fichas(valor_dados[0], valor_dados[1], )
                                     turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
                                     time.sleep(0.2)
                                     self.broadcast(turn_message)
                             else:
-                                self.parques.movimiento_fichas(sum(valor_dados))
+                                #self.parques.movimiento_fichas()
                                 turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
                                 time.sleep(0.2)
                                 self.broadcast(turn_message)
@@ -214,6 +233,11 @@ class Server:
                                 winner_message = f"El ganador es {socket_player_name}!"
                                 self.broadcast(winner_message)
                                 break
+                            else:
+                                initial_positions_message = "Posiciones iniciales: "
+                                for nombre, (color, posiciones) in self.player_colors_and_positions.items():
+                                    initial_positions_message += f"{nombre}.{color}.{posiciones};"
+                                self.broadcast(initial_positions_message)
                 else:
                     time.sleep(0.2)  # Pausa antes de mensaje de espera
                     self.send_message(client_socket, "Espera tu turno.")

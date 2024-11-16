@@ -5,6 +5,7 @@ import time
 import threading
 import queue
 import pygame
+import ast
 
 class Cliente:
     def __init__(self, host='127.0.0.1', port=65432):
@@ -31,6 +32,8 @@ class Cliente:
         self.mensaje_dados = None
         self.tiempo_dados = None
         self.dados_actualizados = False
+        self.posiciones_fichas = []
+        self.player_colors_and_positions = None
 
     def recibir_mensajes(self):
         """Thread worker para recibir mensajes del servidor"""
@@ -93,9 +96,11 @@ class Cliente:
                 self.dados_actualizados = False
 
     def separar_jugadores(self, mensaje):
-        """Extrae los nombres y colores de los jugadores del mensaje"""
         jugadores = mensaje.split(":")[1].split(", ")
-        self.jugadores = [(j.split()[0], j.split()[1]) for j in jugadores]
+        self.jugadores = [(j.split()[0], int(j.split()[1])) for j in jugadores]
+        self.player_colors_and_positions = {}
+        for name, color in self.jugadores:
+            self.player_colors_and_positions[name] = [0, 0, 0, 0]
 
     def procesar_mensajes(self):
         """Procesa los mensajes recibidos sin bloquear"""
@@ -110,6 +115,8 @@ class Cliente:
                 self.transicion_a_juego()
             elif "Los jugadores son:" in mensaje:
                 self.separar_jugadores(mensaje)
+            elif "color:" in mensaje:
+                self.color = int(mensaje.split(":")[1].strip())
             elif any(frase in mensaje for frase in ["se ha unido al juego.", "Bienvenido,", "Esperando más jugadores...", "ha abandonado el juego."]):
                 self.mostrar_mensaje_con_delay(mensaje)
             elif "¿Desean iniciar el juego ahora? (si/no)" in mensaje:
@@ -133,6 +140,21 @@ class Cliente:
                 self.mostrar_mensaje_con_delay(mensaje)
                 self.turno = False
                 self.esperando_respuesta = False
+            elif "Posiciones iniciales:" in mensaje:
+                mensaje_filtrado = mensaje.replace("Posiciones iniciales: ", "").strip()
+                segmentos = mensaje_filtrado.split(";")
+                for segmento in segmentos:
+                    if segmento:
+                        #Separar nombre, color y posiciones
+                        nombre, color, posiciones_str = segmento.split(".")
+                        posiciones = ast.literal_eval(posiciones_str)
+
+                        # Agregar al diccionario de posiciones
+                        self.player_colors_and_positions[nombre] = (color, posiciones) 
+                for nombre, (color, posiciones) in self.player_colors_and_positions.items():
+                    self.juego.jugadores[nombre]["posiciones"] = self.player_colors_and_positions[nombre][1]
+            elif "Dame las fichas":
+                print("Dame las fichas")
             elif "Lo sentimos, hay un juego en curso." in mensaje:
                 self.mostrar_mensaje_con_delay(mensaje)
                 self.estado_actual = "MENU"
@@ -166,7 +188,7 @@ class Cliente:
             self.menu = None
         
         # Inicializar la ventana de juego
-        self.juego = JuegoParques(self.jugadores)
+        self.juego = JuegoParques(self.jugadores, self.nombre, self.color)
         self.ventana_actual = "JUEGO"
         
     def enviar_respuesta(self, mensaje):
@@ -231,12 +253,23 @@ class Cliente:
                             if 700 <= event.pos[0] <= 900 and 500 <= event.pos[1] <= 700:
                                 if self.esperando_respuesta and self.turno:
                                     self.client_socket.sendall("dados".encode('utf-8'))
+                            for key, value in self.juego.coordenadas_fichas.items():
+                                x, y = value
+                                if x <= event.pos[0] <= x+20 and y <= event.pos[1] <= y+20:
+                                    self.juego.crear_ventana_dados(x, y, self.dado1, self.dado2)
+                                    if x-10 <= event.pos[0] <= x+10 and y-20 <= event.pos[1] <= y:
+                                        print("Ficha seleccionada con valor de dado 1", self.dado1)
+                                    if x+10 <= event.pos[0] <= x+30 and y-20 <= event.pos[1] <= y:
+                                        print("Ficha seleccionada con valor de dado 2", self.dado2)
+                            
+
                     if self.ventana_actual == "JUEGO":
                         self.juego.actualizar_pantalla()
                         if self.dado1 and self.dado2:
                             self.juego.dibujar_dados(self.dado1, self.dado2)
                         else:
                             self.juego.dibujar_dados(6, 6)
+                        
                     pygame.display.flip()
                 
                 # Control de FPS

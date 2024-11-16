@@ -27,18 +27,27 @@ class Parques:
         self.jugador_actual = self.jugadores[(self.jugadores.index(self.jugador_actual) + 1) % len(self.jugadores)]
         self.jugador_actual.turno = True
 
-    def movimiento_fichas(self, valor):
-        for ficha in self.jugador_actual.fichas: # Agregar lógica para seleccionar ficha, mientras tanto se mueven todas
-            if ficha.puede_moverse:
-                print(f"Ficha {ficha.numero} se mueve {valor} casillas")
-                if not self.mover_ficha(ficha, valor):
-                    return False
-                print(f"Posición actual: {ficha.casilla.numero}")
-                if ficha.puede_moverse:
-                    break
+    def movimiento_fichas(self, valor_dado1, valor_dado2, ficha1, ficha2):
+        # Mover la primera ficha
+        if ficha1.puede_moverse:
+            print(f"Ficha {ficha1.numero} se mueve {valor_dado1} casillas")
+            if not self.mover_ficha(ficha1, valor_dado1):
+                return False  
+            print(f"Posición actual: {ficha1.casilla.numero}")
+    
+        # Mover la segunda ficha
+        if ficha2.puede_moverse:
+            print(f"Ficha {ficha2.numero} se mueve {valor_dado2} casillas")
+            if not self.mover_ficha(ficha2, valor_dado2):
+                return False  
+            print(f"Posición actual: {ficha2.casilla.numero}")
+
         if self.tablero.verificar_ganador(self.jugador_actual.color):
             self.ganador = self.jugador_actual
         return True
+    
+    def obtener_posiciones_fichas(self):
+        return [ficha.casilla.numero for ficha in self.jugador_actual.fichas]
 
     def jugar(self):
         while self.ganador is None:
