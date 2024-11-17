@@ -28,8 +28,8 @@ class Parques:
         self.jugador_actual.turno = True
 
     def movimiento_fichas(self, valor_dado1, valor_dado2, ficha1, ficha2):
-        ficha1 = self.jugador_actual.fichas[ficha1-1]
-        ficha2 = self.jugador_actual.fichas[ficha2-1]
+        ficha1 = self.jugador_actual.fichas[ficha1]
+        ficha2 = self.jugador_actual.fichas[ficha2]
         # Mover la primera ficha
         if ficha1.puede_moverse:
             print(f"Ficha {ficha1.numero} se mueve {valor_dado1} casillas")

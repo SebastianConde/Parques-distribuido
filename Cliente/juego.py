@@ -106,7 +106,7 @@ class JuegoParques:
                 
             # Dibuja el nombre
             self.window.blit(texto, pos_nombre)
-        
+
         # Diccionario para contar cuántas fichas hay en cada casilla
         fichas_por_casilla = {}
         # Diccionario para guardar qué fichas están en cada casilla
@@ -124,43 +124,51 @@ class JuegoParques:
                 ficha = self.ficha_azul
             elif color == 4:  # Verde
                 ficha = self.ficha_verde
-            for pos in self.jugadores[nombre]["posiciones"]: 
+            for i, pos in enumerate(self.jugadores[nombre]["posiciones"]):
                 if pos == -1: # En la cárcel
                     for i in range(self.num_fichas):
                         pos_x = self.jugadores[nombre]["pos"][0] + i * 40 + 40
                         pos_y =self.jugadores[nombre]["pos"][1] + 100
                         self.window.blit(ficha, (pos_x, pos_y))
                 elif pos == 0: # En el inicio
+                    casilla_inicial = None
                     if color == 1:  # Rojo
-                        for i in range(self.num_fichas):
-                            self.coordenadas_fichas[i] = (MP.seguros_inicios["ROJO_INICIO"][0] + i * 20, MP.seguros_inicios["ROJO_INICIO"][1] + 5)
-                            self.window.blit(ficha, (MP.seguros_inicios["ROJO_INICIO"][0] + i * 20, 
-                                            MP.seguros_inicios["ROJO_INICIO"][1] + 5))
+                        casilla_inicial = 6
                     elif color == 2:  # Amarillo
-                        for i in range(self.num_fichas):
-                            self.coordenadas_fichas[i] = (MP.seguros_inicios["AMARILLO_INICIO"][0] + 5, MP.seguros_inicios["AMARILLO_INICIO"][1] + i * 20)
-                            self.window.blit(ficha, (MP.seguros_inicios["AMARILLO_INICIO"][0] + 5, 
-                                            MP.seguros_inicios["AMARILLO_INICIO"][1] + i * 20))
+                        casilla_inicial = 23
                     elif color == 3:  # Azul
-                        for i in range(self.num_fichas):
-                            self.coordenadas_fichas[i] = (MP.seguros_inicios["AZUL_INICIO"][0] + i * 20, MP.seguros_inicios["AZUL_INICIO"][1] + 5)
-                            self.window.blit(ficha, (MP.seguros_inicios["AZUL_INICIO"][0] + i * 20, 
-                                            MP.seguros_inicios["AZUL_INICIO"][1] + 5))
+                        casilla_inicial = 40
                     elif color == 4:  # Verde
-                        for i in range(self.num_fichas):
-                            self.coordenadas_fichas[i] = (MP.seguros_inicios["VERDE_INICIO"][0] + 5, MP.seguros_inicios["VERDE_INICIO"][1] + i * 20)
-                            self.window.blit(ficha, (MP.seguros_inicios["VERDE_INICIO"][0] + 5, 
-                                            MP.seguros_inicios["VERDE_INICIO"][1] + i * 20))
+                        casilla_inicial = 57
+                        
+                    if casilla_inicial is not None:
+                        # Verificar si ya existe la casilla en los diccionarios
+                        if casilla_inicial not in fichas_por_casilla:
+                            fichas_por_casilla[casilla_inicial] = 0
+                            fichas_info_por_casilla[casilla_inicial] = []
+                            
+                        # Verificar si esta ficha específica ya está en la lista
+                        ficha_existente = False
+                        for ficha_info in fichas_info_por_casilla[casilla_inicial]:
+                            if ficha_info[2] == nombre and ficha_info[3] == i:  # Comparar nombre del jugador e índice de ficha
+                                ficha_existente = True
+                                break
+                                
+                        if not ficha_existente:
+                            fichas_por_casilla[casilla_inicial] += 1
+                            fichas_info_por_casilla[casilla_inicial].append((ficha, color, nombre, i))
                 else: # En una casilla regular
-                    if pos not in fichas_por_casilla:  # Primero, contamos las fichas en cada casilla y guardamos su información
-                        fichas_por_casilla[pos] = 0 
+                    if pos not in fichas_por_casilla:
+                        fichas_por_casilla[pos] = 0
                         fichas_info_por_casilla[pos] = []
+                    fichas_info_por_casilla[pos].append((ficha, color, nombre, i))
                     fichas_por_casilla[pos] += 1
-                    fichas_info_por_casilla[pos].append((ficha, color))
         
         # Ahora dibujamos las fichas en las casillas regulares
-        for casilla, num_fichas in fichas_por_casilla.items():
+        for casilla, fichas in fichas_info_por_casilla.items():
             # Obtener coordenadas de la casilla
+            coords = None
+            especial = False
             if casilla in MP.casillas:
                 coords = MP.casillas[casilla]
             elif casilla in MP.seguros:
@@ -169,51 +177,110 @@ class JuegoParques:
                 coords = MP.camino_cielo[str(casilla)]
             elif casilla in MP.entrada_camino_cielo:
                 coords = MP.entrada_camino_cielo[casilla]
-            else:
-                continue  # Si no encontramos la casilla, saltamos a la siguiente
+            elif casilla in MP.esquinas:
+                coords = MP.esquinas[casilla]
+                especial = True
+            
+            if not coords:
+                continue
 
             # Calcular dimensiones de la casilla
             ancho_casilla = coords[2] - coords[0]
             alto_casilla = coords[3] - coords[1]
 
-            # Distribuir las fichas en la casilla según la cantidad
-            fichas = fichas_info_por_casilla[casilla]
+            tipo_casilla = None
+            if ancho_casilla == 30:
+                tipo_casilla = "vertical"
+            else:
+                tipo_casilla = "horizontal"                
+
+            num_fichas = len(fichas)
+
+            # Calcular posiciones según el número de fichas y orientación
             if num_fichas == 1:
-                # Centrar la ficha
                 x = coords[0] + (ancho_casilla - 20) / 2
                 y = coords[1] + (alto_casilla - 20) / 2
-                self.window.blit(fichas[0][0], (x, y))
+                posiciones = [(x, y)]
             elif num_fichas == 2:
-                # Distribuir en dos posiciones
-                x1 = coords[0] + 5
-                x2 = coords[0] + ancho_casilla - 25
-                y = coords[1] + (alto_casilla - 20) / 2
-                self.window.blit(fichas[0][0], (x1, y))
-                self.window.blit(fichas[1][0], (x2, y))
+                if not especial:
+                    if tipo_casilla == "horizontal":
+                        x1 = coords[0] + 5
+                        x2 = coords[0] + ancho_casilla - 25
+                        y = coords[1] + (alto_casilla - 20) / 2
+                        posiciones = [(x1, y), (x2, y)]
+                    else:  # vertical
+                        x = coords[0] + (ancho_casilla - 20) / 2
+                        y1 = coords[1] + 5
+                        y2 = coords[1] + alto_casilla - 25
+                        posiciones = [(x, y1), (x, y2)]
+                else:  # Esquina
+                    if casilla == 9:
+                        x1 = coords[0] + ancho_casilla - 50
+                        x2 = coords[0] + ancho_casilla - 25
+                        y = coords[1] + (alto_casilla - 20) / 2
+                        posiciones = [(x1, y), (x2, y)]
+                    elif casilla == 10:
+                        x = coords[0] + (ancho_casilla - 20) / 2
+                        y1 = coords[1] + alto_casilla - 50
+                        y2 = coords[1] + alto_casilla - 25
+                        posiciones = [(x, y1), (x, y2)]
+                    elif casilla == 26:
+                        x = coords[0] + (ancho_casilla - 20) / 2
+                        y1 = coords[1] - alto_casilla + 5
+                        y2 = coords[1] - alto_casilla + (alto_casilla / 2) - 10
+                        posiciones = [(x, y1), (x, y2)]
+                    elif casilla == 27:
+                        x1 = coords[0] + (ancho_casilla / 2) - 10
+                        x2 = coords[2] - 25
+                        y = coords[3] + 5
+                        posiciones = [(x1, y), (x2, y)]
+                    elif casilla == 43:
+                        x1 = coords[0] + 5
+                        x2 = coords[0] + 30
+                        y = coords[1] + (alto_casilla / 2) - 10
+                        posiciones = [(x1, y), (x2, y)]
+                    elif casilla == 44:
+                        x = coords[0] + (ancho_casilla - 20) / 2
+                        y1 = coords[1] + 5
+                        y2 = coords[1] + 30
+                        posiciones = [(x, y1), (x, y2)]
+                    elif casilla == 60:
+                        x = coords[0] + (ancho_casilla - 20) / 2
+                        y1 = coords[3] + 30
+                        y2 = coords[3] + 55
+                        posiciones = [(x, y1), (x, y2)]
+                    elif casilla == 61:
+                        x1 = coords[0] + 5
+                        x2 = coords[0] + (ancho_casilla / 2) - 10
+                        y = coords[3] + 5
+                        posiciones = [(x1, y), (x2, y)]
             elif num_fichas == 3:
-                # Distribuir en triángulo
-                x1 = coords[0] + (ancho_casilla - 20) / 2  # Centro arriba
-                y1 = coords[1] + 5
-                x2 = coords[0] + 5  # Abajo izquierda
-                y2 = coords[1] + alto_casilla - 25
-                x3 = coords[0] + ancho_casilla - 25  # Abajo derecha
-                y3 = coords[1] + alto_casilla - 25
-                self.window.blit(fichas[0][0], (x1, y1))
-                self.window.blit(fichas[1][0], (x2, y2))
-                self.window.blit(fichas[2][0], (x3, y3))
-            elif num_fichas == 4:
-                # Distribuir en cuadrado
-                x1 = coords[0] + 5
-                x2 = coords[0] + ancho_casilla - 25
-                y1 = coords[1] + 5
-                y2 = coords[1] + alto_casilla - 25
-                self.window.blit(fichas[0][0], (x1, y1))
-                self.window.blit(fichas[1][0], (x2, y1))
-                self.window.blit(fichas[2][0], (x1, y2))
-                self.window.blit(fichas[3][0], (x2, y2))
+                if tipo_casilla == "horizontal":
+                    ancho_total_fichas = 60  # 3 fichas * 20px
+                    x_inicial = coords[0] + (ancho_casilla - ancho_total_fichas) / 2
+                    y = coords[1] + (alto_casilla - 20) / 2
+                    posiciones = [(x_inicial + x, y) for x in range(0, 60, 20)]
+                else:  # vertical
+                    alto_total_fichas = 60  # 3 fichas * 20px
+                    x = coords[0] + (ancho_casilla - 20) / 2
+                    y_inicial = coords[1] + (alto_casilla - alto_total_fichas) / 2
+                    posiciones = [(x, y_inicial + y) for y in range(0, 60, 20)]
+            else:  # 4 fichas
+                if tipo_casilla == "horizontal":
+                    x_inicial = coords[0] + (ancho_casilla - 80) / 2  # 80 = 4 fichas * 20px
+                    y = coords[1] + (alto_casilla - 20) / 2
+                    posiciones = [(x_inicial + x, y) for x in range(0, 80, 20)]
+                else:  # vertical
+                    x = coords[0] + (ancho_casilla - 20) / 2
+                    y_inicial = coords[1] + (alto_casilla - 80) / 2  # 80 = 4 fichas * 20px
+                    posiciones = [(x, y_inicial + y) for y in range(0, 80, 20)]
+
+            # Dibujar fichas y guardar coordenadas
+            for (ficha, color, nombre, indice), pos in zip(fichas, posiciones):
+                if nombre == self.nombre_jugador:
+                    self.coordenadas_fichas[indice] = pos
+                self.window.blit(ficha, pos)
                 
-
-
                                     
     def crear_ventana_dados(self, x, y, valor1, valor2, valor_disponible):
         """Crea la ventana de los dados y obtiene los valores de los dados"""
