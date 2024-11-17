@@ -106,6 +106,11 @@ class JuegoParques:
                 
             # Dibuja el nombre
             self.window.blit(texto, pos_nombre)
+        
+        # Diccionario para contar cuántas fichas hay en cada casilla
+        fichas_por_casilla = {}
+        # Diccionario para guardar qué fichas están en cada casilla
+        fichas_info_por_casilla = {}
 
         for datos in self.jugadores.values():
             nombre = datos["nombre"]
@@ -146,20 +151,91 @@ class JuegoParques:
                             self.coordenadas_fichas[i] = (MP.seguros_inicios["VERDE_INICIO"][0] + 5, MP.seguros_inicios["VERDE_INICIO"][1] + i * 20)
                             self.window.blit(ficha, (MP.seguros_inicios["VERDE_INICIO"][0] + 5, 
                                             MP.seguros_inicios["VERDE_INICIO"][1] + i * 20))
+                else: # En una casilla regular
+                    if pos not in fichas_por_casilla:  # Primero, contamos las fichas en cada casilla y guardamos su información
+                        fichas_por_casilla[pos] = 0 
+                        fichas_info_por_casilla[pos] = []
+                    fichas_por_casilla[pos] += 1
+                    fichas_info_por_casilla[pos].append((ficha, color))
+        
+        # Ahora dibujamos las fichas en las casillas regulares
+        for casilla, num_fichas in fichas_por_casilla.items():
+            # Obtener coordenadas de la casilla
+            if casilla in MP.casillas:
+                coords = MP.casillas[casilla]
+            elif casilla in MP.seguros:
+                coords = MP.seguros[casilla]
+            elif str(casilla) in MP.camino_cielo:
+                coords = MP.camino_cielo[str(casilla)]
+            elif casilla in MP.entrada_camino_cielo:
+                coords = MP.entrada_camino_cielo[casilla]
+            else:
+                continue  # Si no encontramos la casilla, saltamos a la siguiente
+
+            # Calcular dimensiones de la casilla
+            ancho_casilla = coords[2] - coords[0]
+            alto_casilla = coords[3] - coords[1]
+
+            # Distribuir las fichas en la casilla según la cantidad
+            fichas = fichas_info_por_casilla[casilla]
+            if num_fichas == 1:
+                # Centrar la ficha
+                x = coords[0] + (ancho_casilla - 20) / 2
+                y = coords[1] + (alto_casilla - 20) / 2
+                self.window.blit(fichas[0][0], (x, y))
+            elif num_fichas == 2:
+                # Distribuir en dos posiciones
+                x1 = coords[0] + 5
+                x2 = coords[0] + ancho_casilla - 25
+                y = coords[1] + (alto_casilla - 20) / 2
+                self.window.blit(fichas[0][0], (x1, y))
+                self.window.blit(fichas[1][0], (x2, y))
+            elif num_fichas == 3:
+                # Distribuir en triángulo
+                x1 = coords[0] + (ancho_casilla - 20) / 2  # Centro arriba
+                y1 = coords[1] + 5
+                x2 = coords[0] + 5  # Abajo izquierda
+                y2 = coords[1] + alto_casilla - 25
+                x3 = coords[0] + ancho_casilla - 25  # Abajo derecha
+                y3 = coords[1] + alto_casilla - 25
+                self.window.blit(fichas[0][0], (x1, y1))
+                self.window.blit(fichas[1][0], (x2, y2))
+                self.window.blit(fichas[2][0], (x3, y3))
+            elif num_fichas == 4:
+                # Distribuir en cuadrado
+                x1 = coords[0] + 5
+                x2 = coords[0] + ancho_casilla - 25
+                y1 = coords[1] + 5
+                y2 = coords[1] + alto_casilla - 25
+                self.window.blit(fichas[0][0], (x1, y1))
+                self.window.blit(fichas[1][0], (x2, y1))
+                self.window.blit(fichas[2][0], (x1, y2))
+                self.window.blit(fichas[3][0], (x2, y2))
+                
+
 
                                     
-    def crear_ventana_dados(self, x, y, valor1, valor2):
+    def crear_ventana_dados(self, x, y, valor1, valor2, valor_disponible):
         """Crea la ventana de los dados y obtiene los valores de los dados"""
-        pygame.draw.rect(self.window, (255, 255, 255), (x-10, y-20, x+30, y), 5) # Dibujar el rectángulo
-        self.window.blit(self.font.render(valor1, True, (0,0,0)), (x-10, y-20, x+10, y)) # Dibujar el valor del dado 1
-        self.window.blit(self.font.render(valor2, True, (0,0,0)), (x+10, y-20, x+30, y)) # Dibujar el valor del dado 2
-
-    def dibujar_seguros_iniciales(self):
-        for i in range(self.num_fichas):
-            self.window.blit(self.ficha_roja, (MP.seguros_inicios["ROJO_INICIO"][0] + i * 20, MP.seguros_inicios["ROJO_INICIO"][1] + 5))
-            self.window.blit(self.ficha_azul, (MP.seguros_inicios["AZUL_INICIO"][0] + i * 20, MP.seguros_inicios["AZUL_INICIO"][1] + 5))
-            self.window.blit(self.ficha_amarilla, (MP.seguros_inicios["AMARILLO_INICIO"][0] + 5, MP.seguros_inicios["AMARILLO_INICIO"][1] + i * 20))
-            self.window.blit(self.ficha_verde, (MP.seguros_inicios["VERDE_INICIO"][0] + 5, MP.seguros_inicios["VERDE_INICIO"][1] + i * 20))
+        if valor_disponible == []:
+            dado1 = pygame.transform.scale(self.dado[valor1], (30,30))
+            dado2 = pygame.transform.scale(self.dado[valor2], (30,30))
+            pygame.draw.rect(self.window, (255, 255, 255), (x-20, y-30, 60, 30), border_radius=2) # Dibujar el rectángulo
+            self.window.blit(dado1, (x-20, y-30, x, y)) # Dibujar el valor del dado 1
+            self.window.blit(dado2, (x+10, y-30, x+40, y)) # Dibujar el valor del dado 2
+            pygame.draw.polygon(self.window, (255, 128, 0), [(x, y), (x+10, y+10), (x+20, y)]) #Dibujar triangulo/flecha
+        else:
+            for valor in valor_disponible:
+                if valor == 1:
+                    dado1 = pygame.transform.scale(self.dado[valor1], (30,30))
+                    pygame.draw.rect(self.window, (255, 255, 255), (x-5, y-30, 30, 30), border_radius=2) # Dibujar el rectángulo
+                    self.window.blit(dado1, (x-5, y-30, x+25, y)) # Dibujar el valor del dado 1
+                    pygame.draw.polygon(self.window, (255, 128, 0), [(x, y), (x+10, y+10), (x+20, y)]) #Dibujar triangulo/flecha
+                else:
+                    dado2 = pygame.transform.scale(self.dado[valor2], (30,30))
+                    pygame.draw.rect(self.window, (255, 255, 255), (x-5, y-30, 30, 30), border_radius=2) # Dibujar el rectángulo
+                    self.window.blit(dado2, (x-5, y-30, x+25, y)) # Dibujar el valor del dado 2
+                    pygame.draw.polygon(self.window, (255, 128, 0), [(x, y), (x+10, y+10), (x+20, y)]) #Dibujar triangulo/flecha
 
     def dibujar_metas(self):
         for i in range(self.num_fichas):

@@ -34,6 +34,18 @@ class Cliente:
         self.dados_actualizados = False
         self.posiciones_fichas = []
         self.player_colors_and_positions = None
+        self.ventana_dados = False
+
+        # Variables x y y para las coordenadas de la ventana dados por ficha
+        self.x_ventana = 0
+        self.y_ventana = 0
+        self.actualizar_ventana_dados = []
+        self.estoy_ventana_dados = False
+
+        #Fichas a mover
+        self.fichas_a_mover = []
+        self.esperando_fichas = False
+        self.ficha_a_guardar = None
 
     def recibir_mensajes(self):
         """Thread worker para recibir mensajes del servidor"""
@@ -154,7 +166,7 @@ class Cliente:
                 for nombre, (color, posiciones) in self.player_colors_and_positions.items():
                     self.juego.jugadores[nombre]["posiciones"] = self.player_colors_and_positions[nombre][1]
             elif "Dame las fichas":
-                print("Dame las fichas")
+                self.esperando_fichas = True
             elif "Lo sentimos, hay un juego en curso." in mensaje:
                 self.mostrar_mensaje_con_delay(mensaje)
                 self.estado_actual = "MENU"
@@ -171,13 +183,6 @@ class Cliente:
             self.mensaje_dados = mensaje
             self.tiempo_dados = time.time()
             self.dados_actualizados = True
-
-        if self.dado1 == self.dado2:
-            self.esperando_respuesta = True
-            self.turno = True
-        else:
-            self.esperando_respuesta = False
-            self.turno = False
 
     def transicion_a_juego(self):
         """Maneja la transición de la ventana de menú a la ventana de juego"""
@@ -244,24 +249,59 @@ class Cliente:
 
                 # Manejar eventos de Pygame
                 ventana_actual = self.juego if self.ventana_actual == "JUEGO" else self.menu
+
                 if ventana_actual:
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
                             self.running = False
                             break
-                        if event.type == pygame.MOUSEBUTTONDOWN: 
+                        if event.type == pygame.MOUSEBUTTONDOWN:
                             if 700 <= event.pos[0] <= 900 and 500 <= event.pos[1] <= 700:
-                                if self.esperando_respuesta and self.turno:
+                                if self.esperando_respuesta and self.turno and not self.esperando_fichas:
                                     self.client_socket.sendall("dados".encode('utf-8'))
+                                    time.sleep(0.2)
+                            if self.x_ventana-20 <= event.pos[0] <= self.x_ventana+10 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados and len(self.actualizar_ventana_dados) == 0:
+                                self.estoy_ventana_dados = True
+                                self.actualizar_ventana_dados.append(2)
+                                tupla = (self.ficha_a_guardar, self.dado1)
+                                self.fichas_a_mover.append(tupla)
+                                self.ventana_dados = False
+                                print("Fichas a mover 1:", self.fichas_a_mover, len(self.fichas_a_mover))
+                            elif self.x_ventana+10 <= event.pos[0] <= self.x_ventana+40 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados and len(self.actualizar_ventana_dados) == 0:
+                                self.estoy_ventana_dados = True
+                                self.actualizar_ventana_dados.append(1)
+                                tupla = (self.ficha_a_guardar, self.dado2)
+                                self.fichas_a_mover.append(tupla)
+                                self.ventana_dados = False
+                                print("Fichas a mover 2:", self.fichas_a_mover, len(self.fichas_a_mover))
+
+                            if self.x_ventana-5 <= event.pos[0] <= self.x_ventana+25 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and len(self.actualizar_ventana_dados) > 0 and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados:
+                                self.estoy_ventana_dados = True
+                                if 1 in self.actualizar_ventana_dados:
+                                    self.actualizar_ventana_dados.append(2)
+                                    tupla = (self.ficha_a_guardar, self.dado1)
+                                    self.fichas_a_mover.append(tupla)
+                                else:
+                                    self.actualizar_ventana_dados.append(1)
+                                    tupla = (self.ficha_a_guardar, self.dado2)
+                                    self.fichas_a_mover.append(tupla)
+                                print("Fichas a mover 3:", self.fichas_a_mover, len(self.fichas_a_mover))
+
+                            if self.actualizar_ventana_dados != []:
+                                self.ventana_dados = False
+                                self.x_ventana = 0
+                                self.y_ventana = 0
+                                self.estoy_ventana_dados = False
+
+                            print(f"{self.turno}, {self.esperando_fichas}, {self.estoy_ventana_dados}, {len(self.actualizar_ventana_dados)}") 
                             for key, value in self.juego.coordenadas_fichas.items():
                                 x, y = value
-                                if x <= event.pos[0] <= x+20 and y <= event.pos[1] <= y+20:
-                                    self.juego.crear_ventana_dados(x, y, self.dado1, self.dado2)
-                                    if x-10 <= event.pos[0] <= x+10 and y-20 <= event.pos[1] <= y:
-                                        print("Ficha seleccionada con valor de dado 1", self.dado1)
-                                    if x+10 <= event.pos[0] <= x+30 and y-20 <= event.pos[1] <= y:
-                                        print("Ficha seleccionada con valor de dado 2", self.dado2)
-                            
+                                if x <= event.pos[0] <= x+20 and y <= event.pos[1] <= y+20 and self.turno and not self.estoy_ventana_dados and len(self.actualizar_ventana_dados) < 2 and self.esperando_fichas:
+                                    self.x_ventana = x
+                                    self.y_ventana = y 
+                                    self.ficha_a_guardar = key
+                                    self.ventana_dados = True
+
 
                     if self.ventana_actual == "JUEGO":
                         self.juego.actualizar_pantalla()
@@ -269,7 +309,29 @@ class Cliente:
                             self.juego.dibujar_dados(self.dado1, self.dado2)
                         else:
                             self.juego.dibujar_dados(6, 6)
-                        
+                        if self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados:
+                            self.juego.crear_ventana_dados(self.x_ventana, self.y_ventana, self.dado1, self.dado2, self.actualizar_ventana_dados)
+                            self.estoy_ventana_dados = False
+                        if len(self.actualizar_ventana_dados) == 2:
+                            print("Fichas a mover 4:", self.fichas_a_mover, len(self.fichas_a_mover))
+                            self.actualizar_ventana_dados = []
+                            self.ventana_dados = False
+                            self.x_ventana = 0
+                            self.y_ventana = 0
+                            print(self.fichas_a_mover, len(self.fichas_a_mover)) 
+                            print(self.esperando_fichas) 
+                            print(f"mover_fichas:{self.fichas_a_mover[0][0]},{self.fichas_a_mover[0][1]},{self.fichas_a_mover[1][0]},{self.fichas_a_mover[1][1]}")
+                        if len(self.fichas_a_mover) == 2 and self.esperando_fichas:
+                            self.client_socket.sendall(f"mover_fichas:{self.fichas_a_mover[0][0]},{self.fichas_a_mover[0][1]},{self.fichas_a_mover[1][0]},{self.fichas_a_mover[1][1]}".encode('utf-8'))
+                            self.fichas_a_mover = []
+                            self.esperando_fichas = False
+                            if self.dado1 == self.dado2:
+                                self.esperando_respuesta = True
+                                self.turno = True
+                            else:
+                                self.esperando_respuesta = False
+                                self.turno = False
+
                     pygame.display.flip()
                 
                 # Control de FPS

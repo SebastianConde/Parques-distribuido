@@ -204,6 +204,9 @@ class Server:
 
                         if respuesta == "dados":
                             valor_dados = self.parques.lanzar_dados()
+                            turn_message = f"{socket_player_name} lanza {valor_dados}."
+                            time.sleep(0.2)  # Pausa antes de anunciar resultado
+                            self.broadcast(turn_message)
                             if self.parques.dados.es_par:
                                 jugador.pares_consecutivos += 1
                                 if jugador.pares_consecutivos == 3:
@@ -212,17 +215,42 @@ class Server:
                                     self.parques.cambiar_turno()
                                 else:
                                     #Solicitar que fichas se movieron y con que valor
-                                    self.send_message(client_socket, "Dame las fichas")
                                     time.sleep(0.2)
-                                    respuesta = client_socket.recv(1024).decode('utf-8')
-                                    if respuesta:
-                                        pass
-                                    #self.parques.movimiento_fichas(valor_dados[0], valor_dados[1], )
+                                    self.send_message(client_socket, "Dame las fichas")
+                                    respuesta_fichas = client_socket.recv(1024).decode('utf-8')
+                                    while "mover_fichas:" not in respuesta_fichas:
+                                        time.sleep(0.2)
+                                        self.send_message(client_socket, "Dame las fichas")
+                                        respuesta_fichas = client_socket.recv(1024).decode('utf-8')
+                                    partes = respuesta_fichas.split(":")[1].split(",") 
+                                    ficha1 = int(partes[0])
+                                    dado1 = int(partes[1])
+                                    ficha2 = int(partes[2])
+                                    dado2 = int(partes[3])
+                                    print("Tengo las fichas: ", ficha1, ficha2)
+                                    pos_fichas = self.parques.movimiento_fichas(dado1, dado2, ficha1, ficha2)
+                                    self.player_colors_and_positions[socket_player_name] = (self.player_colors_and_positions[socket_player_name][0], pos_fichas)
+                                    print("Movimiento de fichas exitoso")
                                     turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
                                     time.sleep(0.2)
                                     self.broadcast(turn_message)
                             else:
-                                #self.parques.movimiento_fichas()
+                                time.sleep(0.2)
+                                self.send_message(client_socket, "Dame las fichas")
+                                respuesta_fichas = client_socket.recv(1024).decode('utf-8')
+                                while "mover_fichas:" not in respuesta_fichas:
+                                    self.send_message(client_socket, "Dame las fichas")
+                                    time.sleep(0.2)
+                                    respuesta_fichas = client_socket.recv(1024).decode('utf-8')
+                                partes = respuesta_fichas.split(":")[1].split(",") 
+                                ficha1 = int(partes[0])
+                                dado1 = int(partes[1])
+                                ficha2 = int(partes[2])
+                                dado2 = int(partes[3])
+                                print("Tengo las fichas: ", ficha1, ficha2)
+                                pos_fichas = self.parques.movimiento_fichas(dado1, dado2, ficha1, ficha2)
+                                self.player_colors_and_positions[socket_player_name] = (self.player_colors_and_positions[socket_player_name][0], pos_fichas)
+                                print("Movimiento de fichas exitoso")
                                 turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
                                 time.sleep(0.2)
                                 self.broadcast(turn_message)
