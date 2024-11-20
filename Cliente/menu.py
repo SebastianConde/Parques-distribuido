@@ -24,6 +24,8 @@ class Menu:
                 return False  # Continua hasta presionar Enter
             elif tipo == "condicional":
                 return texto.lower() in ["si", "no"]  # Termina si el texto es "si" o "no"
+            elif tipo == "color":
+                return texto.lower() in ["rojo", "amarillo", "azul", "verde"]  # Termina si el texto es un color
             return False  # Por defecto, no termina
 
         while activo:
@@ -46,21 +48,45 @@ class Menu:
             if es_valido(texto):
                 activo = False
 
-            self.mostrar_mensaje(mensaje + texto)
+            if tipo == "color":
+                mensaje_completo = [mensaje, texto]  # Lista con dos líneas
+            else:
+                mensaje_completo = [mensaje + texto]  # Lista con una línea
+
+            self.mostrar_mensaje(mensaje_completo)
 
             pygame.display.update()
 
         return texto
 
     def mostrar_mensaje(self, mensaje):
-        """ Renderiza el mensaje en la pantalla y muestra el texto completo """
+        """
+        Renderiza el mensaje en la pantalla, soportando múltiples líneas
+        mensaje: puede ser una cadena única o una lista de cadenas para múltiples líneas
+        """
         # Limpiar la pantalla y mostrar fondo
         self.pantalla.blit(self.imagen_fondo, (0, 0))
 
         if mensaje:
-            texto_renderizado = self.fuente.render(mensaje, True, (0, 0, 0))
-            self.pantalla.blit(texto_renderizado, (50, 300))  # Dibuja el texto
-            pygame.display.update()  # Actualiza la pantalla para mostrar el mensaje
+            # Convertir mensaje a lista si es una cadena
+            if isinstance(mensaje, str):
+                lineas = [mensaje]
+            else:
+                lineas = mensaje
+
+            # Altura de cada línea de texto (puede ajustarse según necesidad)
+            altura_linea = 40
+            
+            # Posición inicial Y
+            y = 300
+
+            # Renderizar cada línea
+            for i, linea in enumerate(lineas):
+                if linea:  # Verificar que la línea no esté vacía
+                    texto_renderizado = self.fuente.render(linea, True, (0, 0, 0))
+                    self.pantalla.blit(texto_renderizado, (50, y + (i * altura_linea)))
+
+            pygame.display.update()
 
     def menu(self):
         while True:

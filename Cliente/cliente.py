@@ -21,6 +21,9 @@ class Cliente:
         self.running = True
         self.esperando_respuesta = False # Bandera para esperar respuesta del jugador
         self.esperando_inicio = False
+        self.esperando_color = False
+        self.esperando_dados_inicio = False
+        self.mensaje_color = None
         self.estado_actual = "MENU"  # Estados: MENU, ENTRADA_NOMBRE, JUGANDO, ESPERANDO_INICIO
         self.ultimo_mensaje = None
         self.ultimo_mensaje_dados = None
@@ -73,15 +76,24 @@ class Cliente:
 
     def mostrar_mensaje_con_delay(self, mensaje):
         """Muestra un mensaje y espera el tiempo especificado"""
+        print(f"Mostrando mensaje con delay: {mensaje}")  # Debug print
         if mensaje != self.ultimo_mensaje:
             if self.ventana_actual == "MENU" and self.menu:
                 self.menu.mostrar_mensaje(mensaje)
+                time.sleep(3)
             elif self.ventana_actual == "JUEGO" and self.juego:
                 self.juego.mostrar_mensaje(mensaje)
             
             self.ultimo_mensaje = mensaje
             self.tiempo_mensaje = time.time()
-            time.sleep(3)
+            
+            # Usar threading.Event para sincronizar el delay
+            stop_event = threading.Event()
+            def delay_thread():
+                stop_event.wait(10)  # Espera 10 segundos
+                stop_event.set()
+            
+            threading.Thread(target=delay_thread).start()
 
     def mostrar_mensaje(self, mensaje):
         """Muestra un mensaje en la pantalla"""
@@ -127,13 +139,35 @@ class Cliente:
                 self.transicion_a_juego()
             elif "Los jugadores son:" in mensaje:
                 self.separar_jugadores(mensaje)
-            elif "color:" in mensaje:
+            elif "Color:" in mensaje:
                 self.color = int(mensaje.split(":")[1].strip())
-            elif any(frase in mensaje for frase in ["se ha unido al juego.", "Bienvenido,", "Esperando más jugadores...", "ha abandonado el juego."]):
+            elif any(frase in mensaje for frase in ["se ha unido al juego.", "Bienvenid@,", "Esperando más jugadores...", "ha abandonado el juego.", "Espere..."]):
+                self.mostrar_mensaje_con_delay(mensaje)
+            elif "Elija" in mensaje:
+                self.mensaje_color = mensaje
+                self.estado_actual = "ESPERANDO_COLOR"
+                self.esperando_color = True
+            elif "Color asignado automáticamente." in mensaje:
                 self.mostrar_mensaje_con_delay(mensaje)
             elif "¿Desean iniciar el juego ahora? (si/no)" in mensaje:
                 self.estado_actual = "ESPERANDO_INICIO"
                 self.esperando_inicio = True
+            elif "El primer turno es para:" in mensaje:
+                self.mostrar_mensaje(mensaje)
+                self.esperando_dados_inicio = True
+            elif "ha sacado esto" in mensaje:
+                valores = mensaje.split('(')[1].replace(')', '').split(',')
+                self.dado1 = int(valores[0])
+                self.dado2 = int(valores[1].strip()) 
+                self.mostrar_mensaje_con_delay(mensaje)
+            elif "ha sacado el mayor tiro y comienza el juego." in mensaje:
+                self.dado1 = 6
+                self.dado2 = 6
+                self.esperando_dados_inicio = False
+                self.mostrar_mensaje_con_delay(mensaje)
+                time.sleep(3)
+            elif "Esperando a que tiren los dados" in mensaje:
+                self.mostrar_mensaje(mensaje)
             elif "Es tu turno" in mensaje:
                 self.turno = True
                 self.esperando_respuesta = True
@@ -165,6 +199,41 @@ class Cliente:
                         self.player_colors_and_positions[nombre] = (color, posiciones) 
                 for nombre, (color, posiciones) in self.player_colors_and_positions.items():
                     self.juego.jugadores[nombre]["posiciones"] = self.player_colors_and_positions[nombre][1]
+
+                # Rotar las posiciones de los jugadores según su color
+                if self.color == 2:
+                    for nombre, (color, posiciones) in self.player_colors_and_positions.items():
+                        nuevas_posiciones = []
+                        for pos in posiciones:
+                            if pos == -1 or pos == 0:
+                                nuevas_posiciones.append(pos)  # Mantener -1 y 0 sin cambios
+                            else:
+                                nuevo_pos = (pos + 17) % 68  # Rotar 17 posiciones
+                                nuevas_posiciones.append(68 if nuevo_pos == 0 else nuevo_pos)
+                        self.juego.jugadores[nombre]["posiciones"] = nuevas_posiciones
+
+                elif self.color == 1:
+                    for nombre, (color, posiciones) in self.player_colors_and_positions.items():
+                        nuevas_posiciones = []
+                        for pos in posiciones:
+                            if pos == -1 or pos == 0:
+                                nuevas_posiciones.append(pos)  # Mantener -1 y 0 sin cambios
+                            else:
+                                nuevo_pos = (pos + 34) % 68  # Rotar 34 posiciones
+                                nuevas_posiciones.append(68 if nuevo_pos == 0 else nuevo_pos)
+                        self.juego.jugadores[nombre]["posiciones"] = nuevas_posiciones
+
+                elif self.color == 4:
+                    for nombre, (color, posiciones) in self.player_colors_and_positions.items():
+                        nuevas_posiciones = []
+                        for pos in posiciones:
+                            if pos == -1 or pos == 0:
+                                nuevas_posiciones.append(pos)  # Mantener -1 y 0 sin cambios
+                            else:
+                                nuevo_pos = (pos + 51) % 68  # Rotar 51 posiciones
+                                nuevas_posiciones.append(68 if nuevo_pos == 0 else nuevo_pos)
+                        self.juego.jugadores[nombre]["posiciones"] = nuevas_posiciones
+
             elif "Dame las fichas":
                 self.esperando_fichas = True
             elif "Lo sentimos, hay un juego en curso." in mensaje:
@@ -240,17 +309,28 @@ class Cliente:
                 self.actualizar_dados_y_mensaje()
 
                 # Manejar estados específicos
+                if self.estado_actual == "ESPERANDO_COLOR" and self.esperando_color:
+                    respuesta = self.entrada_texto_con_delay(self.mensaje_color, "color")
+                    if respuesta.lower() in ['rojo', 'amarillo', 'azul', 'verde']:
+                        if respuesta.lower() == 'rojo':
+                            self.client_socket.sendall("color:1".encode('utf-8'))
+                        elif respuesta.lower() == 'amarillo':
+                            self.client_socket.sendall("color:2".encode('utf-8'))
+                        elif respuesta.lower() == 'azul':
+                            self.client_socket.sendall("color:3".encode('utf-8'))
+                        elif respuesta.lower() == 'verde':
+                            self.client_socket.sendall("color:4".encode('utf-8'))
+                        self.esperando_color = False
+                        time.sleep(0.2)
+
                 if self.estado_actual == "ESPERANDO_INICIO" and self.esperando_inicio:
                     respuesta = self.entrada_texto_con_delay("¿Deseas iniciar el juego ahora? (si/no): ", "condicional")
                     if respuesta.lower() in ['si', 'no']:
                         self.enviar_respuesta(respuesta.lower())
                         self.esperando_inicio = False
-                        time.sleep(3)
+                        time.sleep(0.2)
 
-                # Manejar eventos de Pygame
-                ventana_actual = self.juego if self.ventana_actual == "JUEGO" else self.menu
-
-                if ventana_actual:
+                if self.juego:
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
                             self.running = False
@@ -260,20 +340,23 @@ class Cliente:
                                 if self.esperando_respuesta and self.turno and not self.esperando_fichas:
                                     self.client_socket.sendall("dados".encode('utf-8'))
                                     time.sleep(0.2)
+                                elif self.esperando_dados_inicio:
+                                    self.client_socket.sendall("dados".encode('utf-8'))
+                                    self.esperando_dados_inicio = False
+                                    time.sleep(0.2)
+                            
                             if self.x_ventana-20 <= event.pos[0] <= self.x_ventana+10 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados and len(self.actualizar_ventana_dados) == 0:
                                 self.estoy_ventana_dados = True
                                 self.actualizar_ventana_dados.append(2)
                                 tupla = (self.ficha_a_guardar, self.dado1)
                                 self.fichas_a_mover.append(tupla)
                                 self.ventana_dados = False
-                                print("Fichas a mover 1:", self.fichas_a_mover, len(self.fichas_a_mover))
                             elif self.x_ventana+10 <= event.pos[0] <= self.x_ventana+40 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados and len(self.actualizar_ventana_dados) == 0:
                                 self.estoy_ventana_dados = True
                                 self.actualizar_ventana_dados.append(1)
                                 tupla = (self.ficha_a_guardar, self.dado2)
                                 self.fichas_a_mover.append(tupla)
                                 self.ventana_dados = False
-                                print("Fichas a mover 2:", self.fichas_a_mover, len(self.fichas_a_mover))
 
                             if self.x_ventana-5 <= event.pos[0] <= self.x_ventana+25 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and len(self.actualizar_ventana_dados) > 0 and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados:
                                 self.estoy_ventana_dados = True
@@ -285,7 +368,6 @@ class Cliente:
                                     self.actualizar_ventana_dados.append(1)
                                     tupla = (self.ficha_a_guardar, self.dado2)
                                     self.fichas_a_mover.append(tupla)
-                                print("Fichas a mover 3:", self.fichas_a_mover, len(self.fichas_a_mover))
 
                             if self.actualizar_ventana_dados != []:
                                 self.ventana_dados = False
@@ -293,7 +375,6 @@ class Cliente:
                                 self.y_ventana = 0
                                 self.estoy_ventana_dados = False
 
-                            print(f"{self.turno}, {self.esperando_fichas}, {self.estoy_ventana_dados}, {len(self.actualizar_ventana_dados)}") 
                             for key, value in self.juego.coordenadas_fichas.items():
                                 x, y = value
                                 if x <= event.pos[0] <= x+20 and y <= event.pos[1] <= y+20 and self.turno and not self.estoy_ventana_dados and len(self.actualizar_ventana_dados) < 2 and self.esperando_fichas:
@@ -313,14 +394,10 @@ class Cliente:
                             self.juego.crear_ventana_dados(self.x_ventana, self.y_ventana, self.dado1, self.dado2, self.actualizar_ventana_dados)
                             self.estoy_ventana_dados = False
                         if len(self.actualizar_ventana_dados) == 2:
-                            print("Fichas a mover 4:", self.fichas_a_mover, len(self.fichas_a_mover))
                             self.actualizar_ventana_dados = []
                             self.ventana_dados = False
                             self.x_ventana = 0
                             self.y_ventana = 0
-                            print(self.fichas_a_mover, len(self.fichas_a_mover)) 
-                            print(self.esperando_fichas) 
-                            print(f"mover_fichas:{self.fichas_a_mover[0][0]},{self.fichas_a_mover[0][1]},{self.fichas_a_mover[1][0]},{self.fichas_a_mover[1][1]}")
                         if len(self.fichas_a_mover) == 2 and self.esperando_fichas:
                             self.client_socket.sendall(f"mover_fichas:{self.fichas_a_mover[0][0]},{self.fichas_a_mover[0][1]},{self.fichas_a_mover[1][0]},{self.fichas_a_mover[1][1]}".encode('utf-8'))
                             self.fichas_a_mover = []

@@ -1,6 +1,7 @@
 import pygame
 import sys
 import MapeoTablero as MP
+import time
 
 class JuegoParques:
     def __init__(self, jugadores, nombre_jugador, color_dict):
@@ -11,6 +12,14 @@ class JuegoParques:
         
         # Cargar y escalar imágenes
         self.tablero = pygame.transform.scale(pygame.image.load("images/tablero.jpeg"), (self.WIDTH-200, self.HEIGHT))
+
+        if color_dict == 2:
+            self.tablero = pygame.transform.rotate(self.tablero, 90) 
+        elif color_dict == 1:
+            self.tablero = pygame.transform.rotate(self.tablero, 180)
+        elif color_dict == 4:
+            self.tablero = pygame.transform.rotate(self.tablero, 270)
+
         self.ficha_roja = pygame.transform.scale(pygame.image.load("images/ficha_roja.png"), (20, 20))
         self.ficha_amarilla = pygame.transform.scale(pygame.image.load("images/ficha_amarilla.png"), (20, 20))
         self.ficha_verde = pygame.transform.scale(pygame.image.load("images/ficha_verde.png"), (20, 20))
@@ -91,19 +100,55 @@ class JuegoParques:
             texto = self.font.render(nombre, True, datos["color"])
             
             # Determinar la posición del nombre según el color
-            if color == 1:  # Rojo
-                pos_nombre = (MP.carceles["ROJA"][0] + 10, MP.carceles["ROJA"][1] + 30)
-                ficha = self.ficha_roja
-            elif color == 2:  # Amarillo
-                pos_nombre = (MP.carceles["AMARILLA"][0] + 10, MP.carceles["AMARILLA"][1] + 30)
-                ficha = self.ficha_amarilla
-            elif color == 3:  # Azul
-                pos_nombre = (MP.carceles["AZUL"][0], MP.carceles["AZUL"][1] + 30)
-                ficha = self.ficha_azul
-            elif color == 4:  # Verde
-                pos_nombre = (MP.carceles["VERDE"][0], MP.carceles["VERDE"][1] + 30)
-                ficha = self.ficha_verde
-                
+            if self.color_dict == 3:
+                if color == 1:  # Rojo
+                    pos_nombre = (MP.carceles["ROJA"][0] + 10, MP.carceles["ROJA"][1] + 30)
+                elif color == 2:  # Amarillo
+                    pos_nombre = (MP.carceles["AMARILLA"][0] + 10, MP.carceles["AMARILLA"][1] + 30)
+                elif color == 3:  # Azul
+                    pos_nombre = (MP.carceles["AZUL"][0] + 10, MP.carceles["AZUL"][1] + 30)
+                elif color == 4:  # Verde
+                    pos_nombre = (MP.carceles["VERDE"][0] + 10, MP.carceles["VERDE"][1] + 30)
+            elif self.color_dict == 2:
+                if color == 1: # Rojo
+                    color = 2
+                    pos_nombre = (MP.carceles["AMARILLA"][0] + 10, MP.carceles["AMARILLA"][1] + 30)
+                elif color == 2: # Amarillo
+                    color = 3
+                    pos_nombre = (MP.carceles["AZUL"][0] + 10, MP.carceles["AZUL"][1] + 30)
+                elif color == 3: # Azul
+                    color = 4
+                    pos_nombre = (MP.carceles["VERDE"][0] + 10, MP.carceles["VERDE"][1] + 30)
+                elif color == 4: # Verde
+                    color = 1
+                    pos_nombre = (MP.carceles["ROJA"][0] + 10, MP.carceles["ROJA"][1] + 30)
+            elif self.color_dict == 4:
+                if color == 1: # Rojo
+                    color = 4
+                    pos_nombre = (MP.carceles["VERDE"][0] + 10, MP.carceles["VERDE"][1] + 30)
+                elif color == 2: # Amarillo
+                    color = 1
+                    pos_nombre = (MP.carceles["ROJA"][0] + 10, MP.carceles["ROJA"][1] + 30)
+                elif color == 3: # Azul
+                    color = 2
+                    pos_nombre = (MP.carceles["AMARILLA"][0] + 10, MP.carceles["AMARILLA"][1] + 30)
+                elif color == 4: # Verde
+                    color = 3
+                    pos_nombre = (MP.carceles["AZUL"][0] + 10, MP.carceles["AZUL"][1] + 30)
+            elif self.color_dict == 1: 
+                if color == 1: # Rojo
+                    color = 3
+                    pos_nombre = (MP.carceles["AZUL"][0] + 10, MP.carceles["AZUL"][1] + 30)
+                elif color == 2: # Amarillo
+                    color = 4
+                    pos_nombre = (MP.carceles["VERDE"][0] + 10, MP.carceles["VERDE"][1] + 30)
+                elif color == 3: # Azul
+                    color = 1
+                    pos_nombre = (MP.carceles["ROJA"][0] + 10, MP.carceles["ROJA"][1] + 30)
+                elif color == 4: # Verde
+                    color = 2
+                    pos_nombre = (MP.carceles["AMARILLA"][0] + 10, MP.carceles["AMARILLA"][1] + 30)
+
             # Dibuja el nombre
             self.window.blit(texto, pos_nombre)
 
@@ -112,6 +157,7 @@ class JuegoParques:
         # Diccionario para guardar qué fichas están en cada casilla
         fichas_info_por_casilla = {}
 
+        # Cambiar la posición de las fichas si el tablero está rotado
         for datos in self.jugadores.values():
             nombre = datos["nombre"]
             color = datos.get("color_num", 1)  # Obtiene el número de color, default 1
@@ -124,22 +170,83 @@ class JuegoParques:
                 ficha = self.ficha_azul
             elif color == 4:  # Verde
                 ficha = self.ficha_verde
+
             for i, pos in enumerate(self.jugadores[nombre]["posiciones"]):
                 if pos == -1: # En la cárcel
-                    for i in range(self.num_fichas):
-                        pos_x = self.jugadores[nombre]["pos"][0] + i * 40 + 40
-                        pos_y =self.jugadores[nombre]["pos"][1] + 100
-                        self.window.blit(ficha, (pos_x, pos_y))
+                    if self.color_dict == 3:
+                        if color == 1:  # Rojo
+                            self.window.blit(ficha, (MP.carceles["ROJA"][0] + i * 40 + 40, MP.carceles["ROJA"][1] + 100))
+                        elif color == 2:  # Amarillo
+                            self.window.blit(ficha, (MP.carceles["AMARILLA"][0] + i * 40 + 40, MP.carceles["AMARILLA"][1] + 100))
+                        elif color == 3:  # Azul
+                            self.window.blit(ficha, (MP.carceles["AZUL"][0] + i * 40 + 40, MP.carceles["AZUL"][1] + 100))
+                        elif color == 4:  # Verde
+                            self.window.blit(ficha, (MP.carceles["VERDE"][0] + i * 40 + 40, MP.carceles["VERDE"][1] + 100))
+                    elif self.color_dict == 2:
+                        if color == 1: # Rojo
+                            self.window.blit(ficha, (MP.carceles["AMARILLA"][0] + i * 40 + 40, MP.carceles["AMARILLA"][1] + 100))
+                        elif color == 2: # Amarillo
+                            self.window.blit(ficha, (MP.carceles["AZUL"][0] + i * 40 + 40, MP.carceles["AZUL"][1] + 100))
+                        elif color == 3: # Azul
+                            self.window.blit(ficha, (MP.carceles["VERDE"][0] + i * 40 + 40, MP.carceles["VERDE"][1] + 100))
+                        elif color == 4: # Verde
+                            self.window.blit(ficha, (MP.carceles["ROJA"][0] + i * 40 + 40, MP.carceles["ROJA"][1] + 100))
+                    elif self.color_dict == 4:
+                        if color == 1: # Rojo
+                            self.window.blit(ficha, (MP.carceles["VERDE"][0] + i * 40 + 40, MP.carceles["VERDE"][1] + 100))
+                        elif color == 2: # Amarillo
+                            self.window.blit(ficha, (MP.carceles["ROJA"][0] + i * 40 + 40, MP.carceles["ROJA"][1] + 100))
+                        elif color == 3: # Azul
+                            self.window.blit(ficha, (MP.carceles["AMARILLA"][0] + i * 40 + 40, MP.carceles["AMARILLA"][1] + 100))
+                        elif color == 4: # Verde
+                            self.window.blit(ficha, (MP.carceles["AZUL"][0] + i * 40 + 40, MP.carceles["AZUL"][1] + 100))
+                    elif self.color_dict == 1:
+                        if color == 1: # Rojo
+                            self.window.blit(ficha, (MP.carceles["AZUL"][0] + i * 40 + 40, MP.carceles["AZUL"][1] + 100))
+                        elif color == 2: # Amarillo
+                            self.window.blit(ficha, (MP.carceles["VERDE"][0] + i * 40 + 40, MP.carceles["VERDE"][1] + 100))
+                        elif color == 3: # Azul
+                            self.window.blit(ficha, (MP.carceles["ROJA"][0] + i * 40 + 40, MP.carceles["ROJA"][1] + 100))
+                        elif color == 4: # Verde
+                            self.window.blit(ficha, (MP.carceles["AMARILLA"][0] + i * 40 + 40, MP.carceles["AMARILLA"][1] + 100))
                 elif pos == 0: # En el inicio
                     casilla_inicial = None
-                    if color == 1:  # Rojo
-                        casilla_inicial = 6
-                    elif color == 2:  # Amarillo
-                        casilla_inicial = 23
-                    elif color == 3:  # Azul
-                        casilla_inicial = 40
-                    elif color == 4:  # Verde
-                        casilla_inicial = 57
+                    if self.color_dict == 3:
+                        if color == 1:  # Rojo
+                            casilla_inicial = 6
+                        elif color == 2:  # Amarillo
+                            casilla_inicial = 23
+                        elif color == 3:  # Azul
+                            casilla_inicial = 40
+                        elif color == 4:  # Verde
+                            casilla_inicial = 57
+                    elif self.color_dict == 2:
+                        if color == 1: # Rojo
+                            casilla_inicial = 23
+                        elif color == 2: # Amarillo
+                            casilla_inicial = 40
+                        elif color == 3: # Azul
+                            casilla_inicial = 57
+                        elif color == 4: # Verde
+                            casilla_inicial = 6
+                    elif self.color_dict == 4:
+                        if color == 1: # Rojo
+                            casilla_inicial = 57
+                        elif color == 2: # Amarillo
+                            casilla_inicial = 6
+                        elif color == 3: # Azul
+                            casilla_inicial = 23
+                        elif color == 4: # Verde
+                            casilla_inicial = 40
+                    elif self.color_dict == 1:
+                        if color == 1: # Rojo
+                            casilla_inicial = 40
+                        elif color == 2: # Amarillo
+                            casilla_inicial = 57
+                        elif color == 3: # Azul
+                            casilla_inicial = 6
+                        elif color == 4: # Verde
+                            casilla_inicial = 23
                         
                     if casilla_inicial is not None:
                         # Verificar si ya existe la casilla en los diccionarios
@@ -182,7 +289,7 @@ class JuegoParques:
                 especial = True
             
             if not coords:
-                continue
+                continue 
 
             # Calcular dimensiones de la casilla
             ancho_casilla = coords[2] - coords[0]

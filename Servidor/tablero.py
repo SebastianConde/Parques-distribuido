@@ -115,7 +115,7 @@ class Tablero:
                 index_casilla = index_casilla + cantidad
             ficha.casilla = self.casillas[TipoDeCelda.NORMAL][index_casilla]
         ficha.casilla.agregar_ficha(ficha)
-        self.comer_ficha(ficha)
+        self.comer_ficha(ficha) # Retorna el número y color de la ficha comida y si no hay retorna None
         self.verificar_ganador(ficha.color)
         return True
         
