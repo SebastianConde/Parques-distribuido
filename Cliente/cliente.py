@@ -197,41 +197,123 @@ class Cliente:
 
                         # Agregar al diccionario de posiciones
                         self.player_colors_and_positions[nombre] = (color, posiciones) 
+
                 for nombre, (color, posiciones) in self.player_colors_and_positions.items():
                     self.juego.jugadores[nombre]["posiciones"] = self.player_colors_and_positions[nombre][1]
+
+                if self.color == 3:
+                    for nombre, (color, posiciones) in self.player_colors_and_positions.items():
+                        nuevas_posiciones = []
+                        for pos in posiciones:
+                            if isinstance(pos, str):
+                                if color == 3:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "AZUL"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                                if color == 1:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "ROJO"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                                elif color == 2:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "AMARILLO"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                                elif color == 4:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "VERDE"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                            else:
+                                nuevas_posiciones.append(pos)
+                        self.juego.jugadores[self.nombre]["posiciones"] = nuevas_posiciones
 
                 # Rotar las posiciones de los jugadores según su color
                 if self.color == 2:
                     for nombre, (color, posiciones) in self.player_colors_and_positions.items():
                         nuevas_posiciones = []
                         for pos in posiciones:
-                            if pos == -1 or pos == 0:
-                                nuevas_posiciones.append(pos)  # Mantener -1 y 0 sin cambios
+                            if isinstance(pos, int):
+                                if pos == -1 or pos == 0:
+                                    nuevas_posiciones.append(pos)  # Mantener -1 y 0 sin cambios
+                                else:
+                                    nuevo_pos = (pos + 17) % 68  # Rotar 17 posiciones
+                                    nuevas_posiciones.append(68 if nuevo_pos == 0 else nuevo_pos)
                             else:
-                                nuevo_pos = (pos + 17) % 68  # Rotar 17 posiciones
-                                nuevas_posiciones.append(68 if nuevo_pos == 0 else nuevo_pos)
+                                if color == 2:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "AZUL"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                                elif color == 1:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "AMARILLO"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                                elif color == 3:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "VERDE"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                                elif color == 4:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "ROJO"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                                
                         self.juego.jugadores[nombre]["posiciones"] = nuevas_posiciones
 
                 elif self.color == 1:
                     for nombre, (color, posiciones) in self.player_colors_and_positions.items():
                         nuevas_posiciones = []
                         for pos in posiciones:
-                            if pos == -1 or pos == 0:
-                                nuevas_posiciones.append(pos)  # Mantener -1 y 0 sin cambios
+                            if isinstance(pos, int):
+                                if pos == -1 or pos == 0:
+                                    nuevas_posiciones.append(pos)  # Mantener -1 y 0 sin cambios
+                                else:
+                                    nuevo_pos = (pos + 34) % 68  # Rotar 34 posiciones
+                                    nuevas_posiciones.append(68 if nuevo_pos == 0 else nuevo_pos)
                             else:
-                                nuevo_pos = (pos + 34) % 68  # Rotar 34 posiciones
-                                nuevas_posiciones.append(68 if nuevo_pos == 0 else nuevo_pos)
+                                if color == 1:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "AZUL"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                                elif color == 2:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "VERDE"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                                elif color == 3:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "ROJO"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                                elif color == 4:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "AMARILLO"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+
                         self.juego.jugadores[nombre]["posiciones"] = nuevas_posiciones
 
                 elif self.color == 4:
                     for nombre, (color, posiciones) in self.player_colors_and_positions.items():
                         nuevas_posiciones = []
                         for pos in posiciones:
-                            if pos == -1 or pos == 0:
-                                nuevas_posiciones.append(pos)  # Mantener -1 y 0 sin cambios
+                            if isinstance(pos, int):
+                                if pos == -1 or pos == 0:
+                                    nuevas_posiciones.append(pos)  # Mantener -1 y 0 sin cambios
+                                else:
+                                    nuevo_pos = (pos + 51) % 68  # Rotar 51 posiciones
+                                    nuevas_posiciones.append(68 if nuevo_pos == 0 else nuevo_pos)
                             else:
-                                nuevo_pos = (pos + 51) % 68  # Rotar 51 posiciones
-                                nuevas_posiciones.append(68 if nuevo_pos == 0 else nuevo_pos)
+                                if color == 4:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "AZUL"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                                elif color == 1:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "VERDE"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                                elif color == 2:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "ROJO"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
+                                elif color == 3:
+                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                    nueva_pos = "AMARILLO"+nueva_pos
+                                    nuevas_posiciones.append(nueva_pos)
                         self.juego.jugadores[nombre]["posiciones"] = nuevas_posiciones
 
             elif "Dame las fichas":

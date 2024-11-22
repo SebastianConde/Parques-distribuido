@@ -103,7 +103,7 @@ class Tablero:
         ficha.mover(cantidad)
         if ficha.contador < -64 and ficha.contador > -72:
             print("Contador actual: ", ficha.contador)
-            index = 8 * (ficha.color - 1) + abs(ficha.contador + 64) - 1
+            index = 8 * (ficha.color - 1) + abs(ficha.contador + 64) - 1 
             print("index en el cielo: ", index)
             ficha.casilla = self.casillas[TipoDeCelda.CAMINO_CIELO][index]
         elif ficha.contador == -72:
@@ -115,7 +115,7 @@ class Tablero:
                 index_casilla = index_casilla + cantidad
             ficha.casilla = self.casillas[TipoDeCelda.NORMAL][index_casilla]
         ficha.casilla.agregar_ficha(ficha)
-        self.comer_ficha(ficha) # Retorna el número y color de la ficha comida y si no hay retorna None
+        self.comer_ficha(ficha) 
         self.verificar_ganador(ficha.color)
         return True
         

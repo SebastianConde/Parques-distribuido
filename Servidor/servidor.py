@@ -286,32 +286,40 @@ class Server:
                             time.sleep(0.2)  # Pausa antes de anunciar resultado
                             self.broadcast(turn_message)
                             if self.parques.dados.es_par:
-                                jugador.pares_consecutivos += 1
-                                if jugador.pares_consecutivos == 3:
-                                    # Agregar lógica para sacar una ficha
-                                    jugador.pares_consecutivos = 0
-                                    self.parques.cambiar_turno()
-                                else:
-                                    #Solicitar que fichas se movieron y con que valor
-                                    time.sleep(0.2)
-                                    self.send_message(client_socket, "Dame las fichas")
-                                    respuesta_fichas = client_socket.recv(1024).decode('utf-8')
-                                    while "mover_fichas:" not in respuesta_fichas:
+                                salio_de_carcel = False
+                                # Sacar fichas de la cárcel si lanzó par
+                                for ficha in jugador.fichas: 
+                                    if ficha.casilla == self.parques.tablero.casillas[TipoDeCelda.CARCEL][ficha.color - 1]:
+                                        self.parques.tablero.salir_de_carcel(ficha)
+                                        salio_de_carcel = True
+                                        self.player_colors_and_positions[socket_player_name] = (ficha.color, self.parques.obtener_posiciones_fichas())
+                                if not salio_de_carcel:
+                                    jugador.pares_consecutivos += 1
+                                    if jugador.pares_consecutivos == 3:
+                                        # Agregar lógica para sacar una ficha
+                                        jugador.pares_consecutivos = 0
+                                        self.parques.cambiar_turno()
+                                    else:
+                                        #Solicitar que fichas se movieron y con que valor
                                         time.sleep(0.2)
                                         self.send_message(client_socket, "Dame las fichas")
                                         respuesta_fichas = client_socket.recv(1024).decode('utf-8')
-                                    partes = respuesta_fichas.split(":")[1].split(",") 
-                                    ficha1 = int(partes[0])
-                                    dado1 = int(partes[1])
-                                    ficha2 = int(partes[2])
-                                    dado2 = int(partes[3])
-                                    print("Tengo las fichas: ", ficha1, ficha2)
-                                    pos_fichas = self.parques.movimiento_fichas(dado1, dado2, ficha1, ficha2)
-                                    self.player_colors_and_positions[socket_player_name] = (self.player_colors_and_positions[socket_player_name][0], pos_fichas)
-                                    print("Movimiento de fichas exitoso")
-                                    turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
-                                    time.sleep(0.2)
-                                    self.broadcast(turn_message)
+                                        while "mover_fichas:" not in respuesta_fichas:
+                                            time.sleep(0.2)
+                                            self.send_message(client_socket, "Dame las fichas")
+                                            respuesta_fichas = client_socket.recv(1024).decode('utf-8')
+                                        partes = respuesta_fichas.split(":")[1].split(",") 
+                                        ficha1 = int(partes[0])
+                                        dado1 = int(partes[1])
+                                        ficha2 = int(partes[2])
+                                        dado2 = int(partes[3])
+                                        print("Tengo las fichas: ", ficha1, ficha2)
+                                        pos_fichas = self.parques.movimiento_fichas(dado1, dado2, ficha1, ficha2)
+                                        self.player_colors_and_positions[socket_player_name] = (self.player_colors_and_positions[socket_player_name][0], pos_fichas)
+                                        print("Movimiento de fichas exitoso")
+                                        turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
+                                        time.sleep(0.2)
+                                        self.broadcast(turn_message)
                             else:
                                 time.sleep(0.2)
                                 self.send_message(client_socket, "Dame las fichas")
@@ -340,25 +348,39 @@ class Server:
                                 self.broadcast(winner_message)
                                 break
                             else:
-                                ficha_color = None
-                                ficha_numero = None
-                                pos = None
+                                fichas_en_carcel = []
+                                fichas_en_cielo = []
+
                                 for jugador in self.parques.jugadores:
                                     for ficha in jugador.fichas:
                                         if ficha.casilla == self.parques.tablero.casillas[TipoDeCelda.CARCEL][ficha.color - 1]:
-                                            ficha_numero = ficha.numero
-                                            ficha_color = ficha.color
-                                            pos = -1
-                                
+                                            fichas_en_carcel.append({
+                                                'numero': ficha.numero, 
+                                                'color': ficha.color, 
+                                                'pos': -1
+                                            })
+                                        
+                                        for casilla_cielo in self.parques.tablero.casillas[TipoDeCelda.CAMINO_CIELO]:
+                                            if ficha.casilla == casilla_cielo:
+                                                fichas_en_cielo.append({
+                                                    'numero': ficha.numero, 
+                                                    'color': ficha.color, 
+                                                    'pos': str(casilla_cielo.numero)
+                                                })
+
                                 initial_positions_message = "Posiciones iniciales: "
                                 for nombre, (color, posiciones) in self.player_colors_and_positions.items():
-                                    if ficha_color:
-                                        if color == ficha_color: 
-                                            posiciones[ficha_numero - 1] = pos 
-                                        
+                                    for ficha in fichas_en_carcel + fichas_en_cielo: 
+                                        if ficha['color'] == color:
+                                            if isinstance(ficha['pos'], int):
+                                                posiciones[ficha['numero'] - 1] = ficha['pos']
+                                            elif isinstance(ficha['pos'], str):
+                                                posiciones[ficha['numero'] - 1] = f"CAMINO_CIELO:{ficha['pos']}"
+                                    
                                     initial_positions_message += f"{nombre}.{color}.{posiciones};"
 
                                 self.broadcast(initial_positions_message)
+                                
                 else:
                     time.sleep(0.2)  # Pausa antes de mensaje de espera
                     self.send_message(client_socket, "Espera tu turno.")

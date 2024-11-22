@@ -247,6 +247,7 @@ class JuegoParques:
                             casilla_inicial = 6
                         elif color == 4: # Verde
                             casilla_inicial = 23
+                            
                         
                     if casilla_inicial is not None:
                         # Verificar si ya existe la casilla en los diccionarios

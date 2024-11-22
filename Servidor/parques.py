@@ -31,19 +31,27 @@ class Parques:
         ficha1 = self.jugador_actual.fichas[ficha1]
         ficha2 = self.jugador_actual.fichas[ficha2]
 
-        # Mover la primera ficha
-        if ficha1.puede_moverse:
-            print(f"Ficha {ficha1.numero} se mueve {valor_dado1} casillas")
-            if not self.mover_ficha(ficha1, valor_dado1):
-                return False
-            print(f"Posición actual: {ficha1.casilla.numero}")
-    
-        # Mover la segunda ficha
-        if ficha2.puede_moverse:
-            print(f"Ficha {ficha2.numero} se mueve {valor_dado2} casillas")
-            if not self.mover_ficha(ficha2, valor_dado2):
-                return False
-            print(f"Posición actual: {ficha2.casilla.numero}")
+        if ficha1 == ficha2: 
+            valor_dado = valor_dado1 + valor_dado2
+            if ficha1.puede_moverse:
+                print(f"Ficha {ficha1.numero} se mueve {valor_dado} casillas")
+                if not self.mover_ficha(ficha1, valor_dado):
+                    return False
+                print(f"Posición actual: {ficha1.casilla.numero}")
+        else:
+            # Mover la primera ficha
+            if ficha1.puede_moverse:
+                print(f"Ficha {ficha1.numero} se mueve {valor_dado1} casillas")
+                if not self.mover_ficha(ficha1, valor_dado1):
+                    return False
+                print(f"Posición actual: {ficha1.casilla.numero}")
+        
+            # Mover la segunda ficha
+            if ficha2.puede_moverse:
+                print(f"Ficha {ficha2.numero} se mueve {valor_dado2} casillas")
+                if not self.mover_ficha(ficha2, valor_dado2):
+                    return False
+                print(f"Posición actual: {ficha2.casilla.numero}")
 
         nuevas_pos_fichas = self.obtener_posiciones_fichas()
 
