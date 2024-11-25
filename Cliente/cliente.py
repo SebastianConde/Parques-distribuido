@@ -6,6 +6,7 @@ import threading
 import queue
 import pygame
 import ast
+import MapeoTablero as MP
 
 class Cliente:
     def __init__(self, host='127.0.0.1', port=65432):
@@ -49,6 +50,7 @@ class Cliente:
         self.fichas_a_mover = []
         self.esperando_fichas = False
         self.ficha_a_guardar = None
+        self.esperando_ficha_sacar = False
 
     def recibir_mensajes(self):
         """Thread worker para recibir mensajes del servidor"""
@@ -80,7 +82,6 @@ class Cliente:
         if mensaje != self.ultimo_mensaje:
             if self.ventana_actual == "MENU" and self.menu:
                 self.menu.mostrar_mensaje(mensaje)
-                time.sleep(3)
             elif self.ventana_actual == "JUEGO" and self.juego:
                 self.juego.mostrar_mensaje(mensaje)
             
@@ -206,22 +207,26 @@ class Cliente:
                         nuevas_posiciones = []
                         for pos in posiciones:
                             if isinstance(pos, str):
-                                if color == 3:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "AZUL"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
-                                if color == 1:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "ROJO"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
-                                elif color == 2:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "AMARILLO"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
-                                elif color == 4:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "VERDE"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
+                                if color == "3":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "AZUL"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                if color == "1":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "ROJO"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                elif color == "2":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "AMARILLO"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                elif color == "4":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "VERDE"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
                             else:
                                 nuevas_posiciones.append(pos)
                         self.juego.jugadores[self.nombre]["posiciones"] = nuevas_posiciones
@@ -238,22 +243,46 @@ class Cliente:
                                     nuevo_pos = (pos + 17) % 68  # Rotar 17 posiciones
                                     nuevas_posiciones.append(68 if nuevo_pos == 0 else nuevo_pos)
                             else:
-                                if color == 2:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "AZUL"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
-                                elif color == 1:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "AMARILLO"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
-                                elif color == 3:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "VERDE"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
-                                elif color == 4:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "ROJO"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
+                                if color == "2":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "AZUL"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "2":
+                                            nueva_pos = "CIELO3"
+                                            nuevas_posiciones.append(nueva_pos)
+                                elif color == "1":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "AMARILLO"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "1":
+                                            nueva_pos = "CIELO2"
+                                            nuevas_posiciones.append(nueva_pos)
+                                elif color == "3":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "VERDE"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "3":
+                                            nueva_pos = "CIELO4"
+                                            nuevas_posiciones.append(nueva_pos)
+                                elif color == "4":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "ROJO"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "4":
+                                            nueva_pos = "CIELO1"
+                                            nuevas_posiciones.append(nueva_pos)
                                 
                         self.juego.jugadores[nombre]["posiciones"] = nuevas_posiciones
 
@@ -268,22 +297,46 @@ class Cliente:
                                     nuevo_pos = (pos + 34) % 68  # Rotar 34 posiciones
                                     nuevas_posiciones.append(68 if nuevo_pos == 0 else nuevo_pos)
                             else:
-                                if color == 1:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "AZUL"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
-                                elif color == 2:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "VERDE"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
-                                elif color == 3:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "ROJO"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
-                                elif color == 4:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "AMARILLO"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
+                                if color == "1":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "AZUL"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "1":
+                                            nueva_pos = "CIELO3"
+                                            nuevas_posiciones.append(nueva_pos)
+                                elif color == "2":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "VERDE"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "2":
+                                            nueva_pos = "CIELO4"
+                                            nuevas_posiciones.append(nueva_pos)
+                                elif color == "3":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "ROJO"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "3":
+                                            nueva_pos = "CIELO1"
+                                            nuevas_posiciones.append(nueva_pos)
+                                elif color == "4":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "AMARILLO"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "4":
+                                            nueva_pos = "CIELO2"
+                                            nuevas_posiciones.append(nueva_pos)
 
                         self.juego.jugadores[nombre]["posiciones"] = nuevas_posiciones
 
@@ -298,26 +351,54 @@ class Cliente:
                                     nuevo_pos = (pos + 51) % 68  # Rotar 51 posiciones
                                     nuevas_posiciones.append(68 if nuevo_pos == 0 else nuevo_pos)
                             else:
-                                if color == 4:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "AZUL"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
-                                elif color == 1:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "VERDE"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
-                                elif color == 2:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "ROJO"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
-                                elif color == 3:
-                                    nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
-                                    nueva_pos = "AMARILLO"+nueva_pos
-                                    nuevas_posiciones.append(nueva_pos)
+                                if color == "4":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "AZUL"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "4":
+                                            nueva_pos = "CIELO3"
+                                            nuevas_posiciones.append(nueva_pos)
+                                elif color == "1":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "VERDE"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "1":
+                                            nueva_pos = "CIELO4"
+                                            nuevas_posiciones.append(nueva_pos)
+                                elif color == "2":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "ROJO"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "2":
+                                            nueva_pos = "CIELO1"
+                                            nuevas_posiciones.append(nueva_pos)
+                                elif color == "3":
+                                    if "CAMINO_CIELO" in pos:
+                                        nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
+                                        nueva_pos = "AMARILLO"+nueva_pos
+                                        nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "3":
+                                            nueva_pos = "CIELO2"
+                                            nuevas_posiciones.append(nueva_pos)
                         self.juego.jugadores[nombre]["posiciones"] = nuevas_posiciones
 
-            elif "Dame las fichas":
+            elif "Dame las fichas" in mensaje:
                 self.esperando_fichas = True
+                self.turno = True
+            elif "Tienes 3 pares consecutivos. Selecciona una ficha para sacar." in mensaje:
+                self.esperando_ficha_sacar = True
+                self.mostrar_mensaje(mensaje)
             elif "Lo sentimos, hay un juego en curso." in mensaje:
                 self.mostrar_mensaje_con_delay(mensaje)
                 self.estado_actual = "MENU"
@@ -426,30 +507,42 @@ class Cliente:
                                     self.client_socket.sendall("dados".encode('utf-8'))
                                     self.esperando_dados_inicio = False
                                     time.sleep(0.2)
+
+                            if self.esperando_ficha_sacar:
+                                for key, (value, color_ficha) in self.juego.coordenadas_fichas.items():
+                                    x, y = value
+                                    if x <= event.pos[0] <= x+20 and y <= event.pos[1] <= y+20:
+                                        self.client_socket.sendall(f"sacar_ficha:{key}".encode('utf-8'))
+                                        self.esperando_ficha_sacar = False
+                                        self.mostrar_mensaje(f"La ficha {key} ha sido retirada.")
+                                        break
                             
                             if self.x_ventana-20 <= event.pos[0] <= self.x_ventana+10 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados and len(self.actualizar_ventana_dados) == 0:
-                                self.estoy_ventana_dados = True
-                                self.actualizar_ventana_dados.append(2)
-                                tupla = (self.ficha_a_guardar, self.dado1)
-                                self.fichas_a_mover.append(tupla)
-                                self.ventana_dados = False
+                                if self.ficha_a_guardar[1] == self.color or self.ficha_a_guardar == None:
+                                    self.estoy_ventana_dados = True
+                                    self.actualizar_ventana_dados.append(2)
+                                    tupla = (self.ficha_a_guardar[0], self.dado1)
+                                    self.fichas_a_mover.append(tupla)
+                                    self.ventana_dados = False
                             elif self.x_ventana+10 <= event.pos[0] <= self.x_ventana+40 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados and len(self.actualizar_ventana_dados) == 0:
-                                self.estoy_ventana_dados = True
-                                self.actualizar_ventana_dados.append(1)
-                                tupla = (self.ficha_a_guardar, self.dado2)
-                                self.fichas_a_mover.append(tupla)
-                                self.ventana_dados = False
+                                if self.ficha_a_guardar[1] == self.color or self.ficha_a_guardar == None:
+                                    self.estoy_ventana_dados = True
+                                    self.actualizar_ventana_dados.append(1)
+                                    tupla = (self.ficha_a_guardar[0], self.dado2)
+                                    self.fichas_a_mover.append(tupla)
+                                    self.ventana_dados = False
 
                             if self.x_ventana-5 <= event.pos[0] <= self.x_ventana+25 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and len(self.actualizar_ventana_dados) > 0 and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados:
-                                self.estoy_ventana_dados = True
-                                if 1 in self.actualizar_ventana_dados:
-                                    self.actualizar_ventana_dados.append(2)
-                                    tupla = (self.ficha_a_guardar, self.dado1)
-                                    self.fichas_a_mover.append(tupla)
-                                else:
-                                    self.actualizar_ventana_dados.append(1)
-                                    tupla = (self.ficha_a_guardar, self.dado2)
-                                    self.fichas_a_mover.append(tupla)
+                                if self.ficha_a_guardar[1] == self.color or self.ficha_a_guardar == None:
+                                    self.estoy_ventana_dados = True
+                                    if 1 in self.actualizar_ventana_dados:
+                                        self.actualizar_ventana_dados.append(2)
+                                        tupla = (self.ficha_a_guardar[0], self.dado1)
+                                        self.fichas_a_mover.append(tupla)
+                                    else:
+                                        self.actualizar_ventana_dados.append(1)
+                                        tupla = (self.ficha_a_guardar[0], self.dado2)
+                                        self.fichas_a_mover.append(tupla)
 
                             if self.actualizar_ventana_dados != []:
                                 self.ventana_dados = False
@@ -457,12 +550,12 @@ class Cliente:
                                 self.y_ventana = 0
                                 self.estoy_ventana_dados = False
 
-                            for key, value in self.juego.coordenadas_fichas.items():
+                            for key, (value, color_ficha) in self.juego.coordenadas_fichas.items():
                                 x, y = value
-                                if x <= event.pos[0] <= x+20 and y <= event.pos[1] <= y+20 and self.turno and not self.estoy_ventana_dados and len(self.actualizar_ventana_dados) < 2 and self.esperando_fichas:
+                                if x <= event.pos[0] <= x+20 and y <= event.pos[1] <= y+20 and self.turno and not self.estoy_ventana_dados and len(self.actualizar_ventana_dados) < 2 and self.esperando_fichas and color_ficha == self.color and not (260 <= event.pos[0] <= 440 and 260 <= event.pos[1] <= 440) and not any([x1 <= event.pos[0] <= x2 and y1 <= event.pos[1] <= y2 for x1, y1, x2, y2 in MP.carceles.values()]): 
                                     self.x_ventana = x
                                     self.y_ventana = y 
-                                    self.ficha_a_guardar = key
+                                    self.ficha_a_guardar = (key, color_ficha)
                                     self.ventana_dados = True
 
 

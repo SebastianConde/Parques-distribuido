@@ -43,6 +43,12 @@ class Tablero:
 
     def __str__(self):
         return str(self.casillas)
+    
+    def sacar_ficha(self, ficha_a_sacar): # Pares consecutivos
+        ficha_a_sacar.casilla.quitar_ficha(ficha_a_sacar) 
+        ficha_a_sacar.contador = -72
+        ficha_a_sacar.casilla = self.casillas[TipoDeCelda.CIELO][ficha_a_sacar.color-1] 
+
 
     def salir_de_carcel(self, ficha):
         ficha.contador = -1

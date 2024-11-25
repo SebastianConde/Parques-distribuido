@@ -176,39 +176,55 @@ class JuegoParques:
                     if self.color_dict == 3:
                         if color == 1:  # Rojo
                             self.window.blit(ficha, (MP.carceles["ROJA"][0] + i * 40 + 40, MP.carceles["ROJA"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["ROJA"][0] + i * 40 + 40, MP.carceles["ROJA"][1] + 100), color)
                         elif color == 2:  # Amarillo
                             self.window.blit(ficha, (MP.carceles["AMARILLA"][0] + i * 40 + 40, MP.carceles["AMARILLA"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["AMARILLA"][0] + i * 40 + 40, MP.carceles["AMARILLA"][1] + 100), color)
                         elif color == 3:  # Azul
                             self.window.blit(ficha, (MP.carceles["AZUL"][0] + i * 40 + 40, MP.carceles["AZUL"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["AZUL"][0] + i * 40 + 40, MP.carceles["AZUL"][1] + 100), color)
                         elif color == 4:  # Verde
                             self.window.blit(ficha, (MP.carceles["VERDE"][0] + i * 40 + 40, MP.carceles["VERDE"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["VERDE"][0] + i * 40 + 40, MP.carceles["VERDE"][1] + 100), color)
                     elif self.color_dict == 2:
                         if color == 1: # Rojo
                             self.window.blit(ficha, (MP.carceles["AMARILLA"][0] + i * 40 + 40, MP.carceles["AMARILLA"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["AMARILLA"][0] + i * 40 + 40, MP.carceles["AMARILLA"][1] + 100), color)
                         elif color == 2: # Amarillo
                             self.window.blit(ficha, (MP.carceles["AZUL"][0] + i * 40 + 40, MP.carceles["AZUL"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["AZUL"][0] + i * 40 + 40, MP.carceles["AZUL"][1] + 100), color)
                         elif color == 3: # Azul
                             self.window.blit(ficha, (MP.carceles["VERDE"][0] + i * 40 + 40, MP.carceles["VERDE"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["VERDE"][0] + i * 40 + 40, MP.carceles["VERDE"][1] + 100), color)
                         elif color == 4: # Verde
                             self.window.blit(ficha, (MP.carceles["ROJA"][0] + i * 40 + 40, MP.carceles["ROJA"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["ROJA"][0] + i * 40 + 40, MP.carceles["ROJA"][1] + 100), color)
                     elif self.color_dict == 4:
                         if color == 1: # Rojo
                             self.window.blit(ficha, (MP.carceles["VERDE"][0] + i * 40 + 40, MP.carceles["VERDE"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["VERDE"][0] + i * 40 + 40, MP.carceles["VERDE"][1] + 100), color)
                         elif color == 2: # Amarillo
                             self.window.blit(ficha, (MP.carceles["ROJA"][0] + i * 40 + 40, MP.carceles["ROJA"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["ROJA"][0] + i * 40 + 40, MP.carceles["ROJA"][1] + 100), color)
                         elif color == 3: # Azul
                             self.window.blit(ficha, (MP.carceles["AMARILLA"][0] + i * 40 + 40, MP.carceles["AMARILLA"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["AMARILLA"][0] + i * 40 + 40, MP.carceles["AMARILLA"][1] + 100), color)
                         elif color == 4: # Verde
                             self.window.blit(ficha, (MP.carceles["AZUL"][0] + i * 40 + 40, MP.carceles["AZUL"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["AZUL"][0] + i * 40 + 40, MP.carceles["AZUL"][1] + 100), color)
                     elif self.color_dict == 1:
                         if color == 1: # Rojo
                             self.window.blit(ficha, (MP.carceles["AZUL"][0] + i * 40 + 40, MP.carceles["AZUL"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["AZUL"][0] + i * 40 + 40, MP.carceles["AZUL"][1] + 100), color)
                         elif color == 2: # Amarillo
                             self.window.blit(ficha, (MP.carceles["VERDE"][0] + i * 40 + 40, MP.carceles["VERDE"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["VERDE"][0] + i * 40 + 40, MP.carceles["VERDE"][1] + 100), color)
                         elif color == 3: # Azul
                             self.window.blit(ficha, (MP.carceles["ROJA"][0] + i * 40 + 40, MP.carceles["ROJA"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["ROJA"][0] + i * 40 + 40, MP.carceles["ROJA"][1] + 100), color)
                         elif color == 4: # Verde
                             self.window.blit(ficha, (MP.carceles["AMARILLA"][0] + i * 40 + 40, MP.carceles["AMARILLA"][1] + 100))
+                            self.coordenadas_fichas[i] = ((MP.carceles["AMARILLA"][0] + i * 40 + 40, MP.carceles["AMARILLA"][1] + 100), color)
                 elif pos == 0: # En el inicio
                     casilla_inicial = None
                     if self.color_dict == 3:
@@ -277,6 +293,7 @@ class JuegoParques:
             # Obtener coordenadas de la casilla
             coords = None
             especial = False
+            llegada = False
             if casilla in MP.casillas:
                 coords = MP.casillas[casilla]
             elif casilla in MP.seguros:
@@ -288,6 +305,9 @@ class JuegoParques:
             elif casilla in MP.esquinas:
                 coords = MP.esquinas[casilla]
                 especial = True
+            elif casilla in MP.meta:
+                coords = MP.meta[casilla]
+                llegada = True
             
             if not coords:
                 continue 
@@ -305,89 +325,95 @@ class JuegoParques:
             num_fichas = len(fichas)
 
             # Calcular posiciones según el número de fichas y orientación
-            if num_fichas == 1:
-                x = coords[0] + (ancho_casilla - 20) / 2
-                y = coords[1] + (alto_casilla - 20) / 2
-                posiciones = [(x, y)]
-            elif num_fichas == 2:
-                if not especial:
+            if not llegada:
+                if num_fichas == 1:
+                    x = coords[0] + (ancho_casilla - 20) / 2
+                    y = coords[1] + (alto_casilla - 20) / 2
+                    posiciones = [(x, y)]
+                elif num_fichas == 2:
+                    if not especial:
+                        if tipo_casilla == "horizontal":
+                            x1 = coords[0] + 5
+                            x2 = coords[0] + ancho_casilla - 25
+                            y = coords[1] + (alto_casilla - 20) / 2
+                            posiciones = [(x1, y), (x2, y)]
+                        else:  # vertical
+                            x = coords[0] + (ancho_casilla - 20) / 2
+                            y1 = coords[1] + 5
+                            y2 = coords[1] + alto_casilla - 25
+                            posiciones = [(x, y1), (x, y2)]
+                    else:  # Esquina
+                        if casilla == 9:
+                            x1 = coords[0] + ancho_casilla - 50
+                            x2 = coords[0] + ancho_casilla - 25
+                            y = coords[1] + (alto_casilla - 20) / 2
+                            posiciones = [(x1, y), (x2, y)]
+                        elif casilla == 10:
+                            x = coords[0] + (ancho_casilla - 20) / 2
+                            y1 = coords[1] + alto_casilla - 50
+                            y2 = coords[1] + alto_casilla - 25
+                            posiciones = [(x, y1), (x, y2)]
+                        elif casilla == 26:
+                            x = coords[0] + (ancho_casilla - 20) / 2
+                            y1 = coords[1] - alto_casilla + 5
+                            y2 = coords[1] - alto_casilla + (alto_casilla / 2) - 10
+                            posiciones = [(x, y1), (x, y2)]
+                        elif casilla == 27:
+                            x1 = coords[0] + (ancho_casilla / 2) - 10
+                            x2 = coords[2] - 25
+                            y = coords[3] + 5
+                            posiciones = [(x1, y), (x2, y)]
+                        elif casilla == 43:
+                            x1 = coords[0] + 5
+                            x2 = coords[0] + 30
+                            y = coords[1] + (alto_casilla / 2) - 10
+                            posiciones = [(x1, y), (x2, y)]
+                        elif casilla == 44:
+                            x = coords[0] + (ancho_casilla - 20) / 2
+                            y1 = coords[1] + 5
+                            y2 = coords[1] + 30
+                            posiciones = [(x, y1), (x, y2)]
+                        elif casilla == 60:
+                            x = coords[0] + (ancho_casilla - 20) / 2
+                            y1 = coords[3] + 30
+                            y2 = coords[3] + 55
+                            posiciones = [(x, y1), (x, y2)]
+                        elif casilla == 61:
+                            x1 = coords[0] + 5
+                            x2 = coords[0] + (ancho_casilla / 2) - 10
+                            y = coords[3] + 5
+                            posiciones = [(x1, y), (x2, y)]
+                elif num_fichas == 3:
                     if tipo_casilla == "horizontal":
-                        x1 = coords[0] + 5
-                        x2 = coords[0] + ancho_casilla - 25
+                        ancho_total_fichas = 60  # 3 fichas * 20px
+                        x_inicial = coords[0] + (ancho_casilla - ancho_total_fichas) / 2
                         y = coords[1] + (alto_casilla - 20) / 2
-                        posiciones = [(x1, y), (x2, y)]
+                        posiciones = [(x_inicial + x, y) for x in range(0, 60, 20)]
+                    else:  # vertical
+                        alto_total_fichas = 60  # 3 fichas * 20px
+                        x = coords[0] + (ancho_casilla - 20) / 2
+                        y_inicial = coords[1] + (alto_casilla - alto_total_fichas) / 2
+                        posiciones = [(x, y_inicial + y) for y in range(0, 60, 20)]
+                else:  # 4 fichas
+                    if tipo_casilla == "horizontal":
+                        x_inicial = coords[0] + (ancho_casilla - 80) / 2  # 80 = 4 fichas * 20px
+                        y = coords[1] + (alto_casilla - 20) / 2
+                        posiciones = [(x_inicial + x, y) for x in range(0, 80, 20)]
                     else:  # vertical
                         x = coords[0] + (ancho_casilla - 20) / 2
-                        y1 = coords[1] + 5
-                        y2 = coords[1] + alto_casilla - 25
-                        posiciones = [(x, y1), (x, y2)]
-                else:  # Esquina
-                    if casilla == 9:
-                        x1 = coords[0] + ancho_casilla - 50
-                        x2 = coords[0] + ancho_casilla - 25
-                        y = coords[1] + (alto_casilla - 20) / 2
-                        posiciones = [(x1, y), (x2, y)]
-                    elif casilla == 10:
-                        x = coords[0] + (ancho_casilla - 20) / 2
-                        y1 = coords[1] + alto_casilla - 50
-                        y2 = coords[1] + alto_casilla - 25
-                        posiciones = [(x, y1), (x, y2)]
-                    elif casilla == 26:
-                        x = coords[0] + (ancho_casilla - 20) / 2
-                        y1 = coords[1] - alto_casilla + 5
-                        y2 = coords[1] - alto_casilla + (alto_casilla / 2) - 10
-                        posiciones = [(x, y1), (x, y2)]
-                    elif casilla == 27:
-                        x1 = coords[0] + (ancho_casilla / 2) - 10
-                        x2 = coords[2] - 25
-                        y = coords[3] + 5
-                        posiciones = [(x1, y), (x2, y)]
-                    elif casilla == 43:
-                        x1 = coords[0] + 5
-                        x2 = coords[0] + 30
-                        y = coords[1] + (alto_casilla / 2) - 10
-                        posiciones = [(x1, y), (x2, y)]
-                    elif casilla == 44:
-                        x = coords[0] + (ancho_casilla - 20) / 2
-                        y1 = coords[1] + 5
-                        y2 = coords[1] + 30
-                        posiciones = [(x, y1), (x, y2)]
-                    elif casilla == 60:
-                        x = coords[0] + (ancho_casilla - 20) / 2
-                        y1 = coords[3] + 30
-                        y2 = coords[3] + 55
-                        posiciones = [(x, y1), (x, y2)]
-                    elif casilla == 61:
-                        x1 = coords[0] + 5
-                        x2 = coords[0] + (ancho_casilla / 2) - 10
-                        y = coords[3] + 5
-                        posiciones = [(x1, y), (x2, y)]
-            elif num_fichas == 3:
-                if tipo_casilla == "horizontal":
-                    ancho_total_fichas = 60  # 3 fichas * 20px
-                    x_inicial = coords[0] + (ancho_casilla - ancho_total_fichas) / 2
-                    y = coords[1] + (alto_casilla - 20) / 2
-                    posiciones = [(x_inicial + x, y) for x in range(0, 60, 20)]
-                else:  # vertical
-                    alto_total_fichas = 60  # 3 fichas * 20px
-                    x = coords[0] + (ancho_casilla - 20) / 2
-                    y_inicial = coords[1] + (alto_casilla - alto_total_fichas) / 2
-                    posiciones = [(x, y_inicial + y) for y in range(0, 60, 20)]
-            else:  # 4 fichas
-                if tipo_casilla == "horizontal":
-                    x_inicial = coords[0] + (ancho_casilla - 80) / 2  # 80 = 4 fichas * 20px
-                    y = coords[1] + (alto_casilla - 20) / 2
-                    posiciones = [(x_inicial + x, y) for x in range(0, 80, 20)]
-                else:  # vertical
-                    x = coords[0] + (ancho_casilla - 20) / 2
-                    y_inicial = coords[1] + (alto_casilla - 80) / 2  # 80 = 4 fichas * 20px
-                    posiciones = [(x, y_inicial + y) for y in range(0, 80, 20)]
+                        y_inicial = coords[1] + (alto_casilla - 80) / 2  # 80 = 4 fichas * 20px
+                        posiciones = [(x, y_inicial + y) for y in range(0, 80, 20)]
 
-            # Dibujar fichas y guardar coordenadas
-            for (ficha, color, nombre, indice), pos in zip(fichas, posiciones):
-                if nombre == self.nombre_jugador:
-                    self.coordenadas_fichas[indice] = pos
-                self.window.blit(ficha, pos)
+                # Dibujar fichas y guardar coordenadas
+                for (ficha, color, nombre, indice), pos in zip(fichas, posiciones):
+                    if nombre == self.nombre_jugador:
+                        self.coordenadas_fichas[indice] = (pos, color)
+                    self.window.blit(ficha, pos)
+            else:  # Casilla de llegada
+                for (ficha, color, nombre, indice), pos in zip(fichas, posiciones):
+                    if nombre == self.nombre_jugador:
+                        self.coordenadas_fichas[indice] = (pos, color)
+                self.dibujar_metas(num_fichas, casilla, fichas[0][0])
                 
                                     
     def crear_ventana_dados(self, x, y, valor1, valor2, valor_disponible):
@@ -412,12 +438,16 @@ class JuegoParques:
                     self.window.blit(dado2, (x-5, y-30, x+25, y)) # Dibujar el valor del dado 2
                     pygame.draw.polygon(self.window, (255, 128, 0), [(x, y), (x+10, y+10), (x+20, y)]) #Dibujar triangulo/flecha
 
-    def dibujar_metas(self):
-        for i in range(self.num_fichas):
-            self.window.blit(self.ficha_roja, (35 + MP.meta["ROJO8"][0] + i * 30, MP.meta["ROJO8"][1] + 20))
-            self.window.blit(self.ficha_azul, (35 + MP.meta["AZUL8"][0] + i * 30, MP.meta["AZUL8"][1] - 40))
-            self.window.blit(self.ficha_amarilla, (20 + MP.meta["AMARILLO8"][0], 35 + MP.meta["AMARILLO8"][1] + i * 30))
-            self.window.blit(self.ficha_verde, (-40 + MP.meta["VERDE8"][0], 35 + MP.meta["VERDE8"][1] + i * 30))
+    def dibujar_metas(self, num_fichas, casilla, ficha):
+        for i in range(num_fichas):
+            if casilla == "CIELO1":
+                self.window.blit(ficha, (35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] + 20))
+            elif casilla == "CIELO3":
+                self.window.blit(ficha, (35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] - 40))
+            elif casilla == "CIELO2":
+                self.window.blit(ficha, (20 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30))
+            elif casilla == "CIELO4":
+                self.window.blit(ficha, (-40 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30))
 
     def mostrar_mensaje(self, mensaje):
         """Actualiza el mensaje actual y el tiempo de visualización"""

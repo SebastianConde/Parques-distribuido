@@ -22,6 +22,10 @@ class Parques:
     def mover_ficha(self, ficha, cantidad):
         return self.tablero.mover_ficha(ficha, cantidad)
     
+    def sacar_ficha(self, ficha_a_sacar):
+        ficha_a_sacar = self.jugador_actual.fichas[ficha_a_sacar]
+        self.tablero.sacar_ficha(ficha_a_sacar)
+
     def cambiar_turno(self):
         self.jugador_actual.turno = False
         self.jugador_actual = self.jugadores[(self.jugadores.index(self.jugador_actual) + 1) % len(self.jugadores)]

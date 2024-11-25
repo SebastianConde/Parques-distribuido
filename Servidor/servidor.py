@@ -285,6 +285,48 @@ class Server:
                             turn_message = f"{socket_player_name} lanza {valor_dados}."
                             time.sleep(0.2)  # Pausa antes de anunciar resultado
                             self.broadcast(turn_message)
+                            def solicitar_y_mover_fichas(client_socket, socket_player_name, valor_dados):
+                                """Maneja la solicitud y movimiento de fichas"""
+                                time.sleep(0.2)
+                                self.send_message(client_socket, "Dame las fichas")
+                                
+                                # Obtener fichas válidas
+                                pos_fichas = False
+                                while not pos_fichas:
+                                    respuesta_fichas = client_socket.recv(1024).decode('utf-8')
+                                    while "mover_fichas:" not in respuesta_fichas:
+                                        time.sleep(0.2)
+                                        self.send_message(client_socket, "Dame las fichas")
+                                        respuesta_fichas = client_socket.recv(1024).decode('utf-8')
+                                    
+                                    # Procesar respuesta
+                                    partes = respuesta_fichas.split(":")[1].split(",") 
+                                    ficha1 = int(partes[0])
+                                    dado1 = int(partes[1])
+                                    ficha2 = int(partes[2])
+                                    dado2 = int(partes[3])
+                                    print("Tengo las fichas: ", ficha1, ficha2)
+                                    
+                                    # Validar movimiento
+                                    pos_fichas = self.parques.movimiento_fichas(dado1, dado2, ficha1, ficha2)
+                                    if not pos_fichas:
+                                        self.send_message(client_socket, "Movimiento de fichas no válido. Inténtalo de nuevo.")
+                                        time.sleep(0.2)
+                                        self.send_message(client_socket, "Dame las fichas")
+                                
+                                # Actualizar posiciones y notificar
+                                self.player_colors_and_positions[socket_player_name] = (
+                                    self.player_colors_and_positions[socket_player_name][0], 
+                                    pos_fichas
+                                )
+                                print("Movimiento de fichas exitoso")
+                                turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
+                                time.sleep(0.2)
+                                self.broadcast(turn_message)
+                                
+                                return pos_fichas
+
+                            # Y luego en tu código principal:
                             if self.parques.dados.es_par:
                                 salio_de_carcel = False
                                 # Sacar fichas de la cárcel si lanzó par
@@ -293,53 +335,26 @@ class Server:
                                         self.parques.tablero.salir_de_carcel(ficha)
                                         salio_de_carcel = True
                                         self.player_colors_and_positions[socket_player_name] = (ficha.color, self.parques.obtener_posiciones_fichas())
+                                
                                 if not salio_de_carcel:
                                     jugador.pares_consecutivos += 1
                                     if jugador.pares_consecutivos == 3:
-                                        # Agregar lógica para sacar una ficha
+                                        # Lógica para sacar una ficha
                                         jugador.pares_consecutivos = 0
+                                        self.send_message(client_socket, "Tienes 3 pares consecutivos. Selecciona una ficha para sacar.")
+                                        respuesta = client_socket.recv(1024).decode('utf-8')
+                                        if "sacar_ficha" in respuesta:
+                                            ficha_sacar = int(respuesta.split(":")[1]) 
+                                            print(f"Sacando ficha {ficha_sacar}")
+                                            self.parques.sacar_ficha(ficha_sacar)
+                                            ficha_sacar = jugador.fichas[ficha_sacar]
+                                            self.player_colors_and_positions[socket_player_name] = (ficha_sacar.color, self.parques.obtener_posiciones_fichas())
                                         self.parques.cambiar_turno()
                                     else:
-                                        #Solicitar que fichas se movieron y con que valor
-                                        time.sleep(0.2)
-                                        self.send_message(client_socket, "Dame las fichas")
-                                        respuesta_fichas = client_socket.recv(1024).decode('utf-8')
-                                        while "mover_fichas:" not in respuesta_fichas:
-                                            time.sleep(0.2)
-                                            self.send_message(client_socket, "Dame las fichas")
-                                            respuesta_fichas = client_socket.recv(1024).decode('utf-8')
-                                        partes = respuesta_fichas.split(":")[1].split(",") 
-                                        ficha1 = int(partes[0])
-                                        dado1 = int(partes[1])
-                                        ficha2 = int(partes[2])
-                                        dado2 = int(partes[3])
-                                        print("Tengo las fichas: ", ficha1, ficha2)
-                                        pos_fichas = self.parques.movimiento_fichas(dado1, dado2, ficha1, ficha2)
-                                        self.player_colors_and_positions[socket_player_name] = (self.player_colors_and_positions[socket_player_name][0], pos_fichas)
-                                        print("Movimiento de fichas exitoso")
-                                        turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
-                                        time.sleep(0.2)
-                                        self.broadcast(turn_message)
+                                        solicitar_y_mover_fichas(client_socket, socket_player_name, valor_dados)
                             else:
-                                time.sleep(0.2)
-                                self.send_message(client_socket, "Dame las fichas")
-                                respuesta_fichas = client_socket.recv(1024).decode('utf-8')
-                                while "mover_fichas:" not in respuesta_fichas:
-                                    self.send_message(client_socket, "Dame las fichas")
-                                    time.sleep(0.2)
-                                    respuesta_fichas = client_socket.recv(1024).decode('utf-8')
-                                partes = respuesta_fichas.split(":")[1].split(",") 
-                                ficha1 = int(partes[0])
-                                dado1 = int(partes[1])
-                                ficha2 = int(partes[2])
-                                dado2 = int(partes[3])
-                                print("Tengo las fichas: ", ficha1, ficha2)
-                                pos_fichas = self.parques.movimiento_fichas(dado1, dado2, ficha1, ficha2)
-                                self.player_colors_and_positions[socket_player_name] = (self.player_colors_and_positions[socket_player_name][0], pos_fichas)
-                                print("Movimiento de fichas exitoso")
-                                turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
-                                time.sleep(0.2)
-                                self.broadcast(turn_message)
+                                solicitar_y_mover_fichas(client_socket, socket_player_name, valor_dados)
+                                jugador.pares_consecutivos = 0
                                 self.parques.cambiar_turno()
 
                             if self.parques.ganador:
@@ -350,6 +365,7 @@ class Server:
                             else:
                                 fichas_en_carcel = []
                                 fichas_en_cielo = []
+                                fichas_cielo = []
 
                                 for jugador in self.parques.jugadores:
                                     for ficha in jugador.fichas:
@@ -368,14 +384,25 @@ class Server:
                                                     'pos': str(casilla_cielo.numero)
                                                 })
 
+                                        for cielo in self.parques.tablero.casillas[TipoDeCelda.CIELO]:
+                                            if ficha.casilla == cielo:
+                                                fichas_cielo.append({
+                                                    'numero': ficha.numero, 
+                                                    'color': ficha.color, 
+                                                    'pos': f"CIELO{cielo.numero}"
+                                                })
+
                                 initial_positions_message = "Posiciones iniciales: "
                                 for nombre, (color, posiciones) in self.player_colors_and_positions.items():
-                                    for ficha in fichas_en_carcel + fichas_en_cielo: 
+                                    for ficha in fichas_en_carcel + fichas_en_cielo + fichas_cielo: 
                                         if ficha['color'] == color:
                                             if isinstance(ficha['pos'], int):
                                                 posiciones[ficha['numero'] - 1] = ficha['pos']
                                             elif isinstance(ficha['pos'], str):
-                                                posiciones[ficha['numero'] - 1] = f"CAMINO_CIELO:{ficha['pos']}"
+                                                if "CIELO" in ficha['pos']:
+                                                    posiciones[ficha['numero'] - 1] = f"{ficha['pos']}"
+                                                else:
+                                                    posiciones[ficha['numero'] - 1] = f"CAMINO_CIELO:{ficha['pos']}"
                                     
                                     initial_positions_message += f"{nombre}.{color}.{posiciones};"
 
