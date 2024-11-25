@@ -326,7 +326,6 @@ class Server:
                                 
                                 return pos_fichas
 
-                            # Y luego en tu código principal:
                             if self.parques.dados.es_par:
                                 salio_de_carcel = False
                                 # Sacar fichas de la cárcel si lanzó par
@@ -352,7 +351,7 @@ class Server:
                                         self.parques.cambiar_turno()
                                     else:
                                         solicitar_y_mover_fichas(client_socket, socket_player_name, valor_dados)
-                            else:
+                            else: # Impar
                                 solicitar_y_mover_fichas(client_socket, socket_player_name, valor_dados)
                                 jugador.pares_consecutivos = 0
                                 self.parques.cambiar_turno()
