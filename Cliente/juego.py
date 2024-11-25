@@ -394,7 +394,7 @@ class JuegoParques:
                         x = coords[0] + (ancho_casilla - 20) / 2
                         y_inicial = coords[1] + (alto_casilla - alto_total_fichas) / 2
                         posiciones = [(x, y_inicial + y) for y in range(0, 60, 20)]
-                else:  # 4 fichas
+                elif num_fichas == 4:  # 4 fichas
                     if tipo_casilla == "horizontal":
                         x_inicial = coords[0] + (ancho_casilla - 80) / 2  # 80 = 4 fichas * 20px
                         y = coords[1] + (alto_casilla - 20) / 2
@@ -403,6 +403,46 @@ class JuegoParques:
                         x = coords[0] + (ancho_casilla - 20) / 2
                         y_inicial = coords[1] + (alto_casilla - 80) / 2  # 80 = 4 fichas * 20px
                         posiciones = [(x, y_inicial + y) for y in range(0, 80, 20)]
+                elif num_fichas == 5:  # 5 fichas
+                    fichas = [(pygame.transform.scale(ficha, (16, 16)), color, nombre, i) for ficha, color, nombre, i in fichas]
+                    if tipo_casilla == "horizontal":
+                        x_inicial = coords[0] + (ancho_casilla - 80) / 2 # 80 = 5 fichas * 16px
+                        y = coords[1] + (alto_casilla - 16) / 2
+                        posiciones = [(x_inicial + x, y) for x in range(0, 80, 16)]
+                    else:  # vertical
+                        x = coords[0] + (ancho_casilla - 16) / 2
+                        y_inicial = coords[1] + (alto_casilla - 80) / 2 # 80 = 5 fichas * 16px
+                        posiciones = [(x, y_inicial + y) for y in range(0, 80, 16)]
+                elif num_fichas == 6:  # 6 fichas
+                    fichas = [(pygame.transform.scale(ficha, (13, 13)), color, nombre, i) for ficha, color, nombre, i in fichas]
+                    if tipo_casilla == "horizontal":
+                        x_inicial = coords[0] + (ancho_casilla - 78) / 2 # 78 = 6 fichas * 13px
+                        y = coords[1] + (alto_casilla - 13) / 2
+                        posiciones = [(x_inicial + x, y) for x in range(0, 78, 13)]
+                    else:  # vertical
+                        x = coords[0] + (ancho_casilla - 13) / 2
+                        y_inicial = coords[1] + (alto_casilla - 78) / 2 # 78 = 6 fichas * 13px
+                        posiciones = [(x, y_inicial + y) for y in range(0, 78, 13)]
+                elif num_fichas == 7:  # 7 fichas
+                    fichas = [(pygame.transform.scale(ficha, (11, 11)), color, nombre, i) for ficha, color, nombre, i in fichas]
+                    if tipo_casilla == "horizontal":
+                        x_inicial = coords[0] + (ancho_casilla - 77) / 2 # 77 = 7 fichas * 11px
+                        y = coords[1] + (alto_casilla - 11) / 2
+                        posiciones = [(x_inicial + x, y) for x in range(0, 77, 11)]
+                    else:  # vertical
+                        x = coords[0] + (ancho_casilla - 11) / 2
+                        y_inicial = coords[1] + (alto_casilla - 77) / 2 # 77 = 7 fichas * 11px
+                        posiciones = [(x, y_inicial + y) for y in range(0, 77, 11)]
+                elif num_fichas == 8:  # 8 fichas
+                    fichas = [(pygame.transform.scale(ficha, (10, 10)), color, nombre, i) for ficha, color, nombre, i in fichas]
+                    if tipo_casilla == "horizontal":
+                        x_inicial = coords[0] + (ancho_casilla - 80) / 2
+                        y = coords[1] + (alto_casilla - 10) / 2
+                        posiciones = [(x_inicial + x, y) for x in range(0, 80, 10)]
+                    else:  # vertical
+                        x = coords[0] + (ancho_casilla - 10) / 2
+                        y_inicial = coords[1] + (alto_casilla - 80) / 2
+                        posiciones = [(x, y_inicial + y) for y in range(0, 80, 10)]
 
                 # Dibujar fichas y guardar coordenadas
                 for (ficha, color, nombre, indice), pos in zip(fichas, posiciones):
@@ -410,10 +450,8 @@ class JuegoParques:
                         self.coordenadas_fichas[indice] = (pos, color)
                     self.window.blit(ficha, pos)
             else:  # Casilla de llegada
-                for (ficha, color, nombre, indice), pos in zip(fichas, posiciones):
-                    if nombre == self.nombre_jugador:
-                        self.coordenadas_fichas[indice] = (pos, color)
-                self.dibujar_metas(num_fichas, casilla, fichas[0][0])
+                for (ficha, color, nombre, indice) in fichas:
+                    self.dibujar_metas(indice, casilla, fichas[0][0])
                 
                                     
     def crear_ventana_dados(self, x, y, valor1, valor2, valor_disponible):
@@ -438,16 +476,19 @@ class JuegoParques:
                     self.window.blit(dado2, (x-5, y-30, x+25, y)) # Dibujar el valor del dado 2
                     pygame.draw.polygon(self.window, (255, 128, 0), [(x, y), (x+10, y+10), (x+20, y)]) #Dibujar triangulo/flecha
 
-    def dibujar_metas(self, num_fichas, casilla, ficha):
-        for i in range(num_fichas):
-            if casilla == "CIELO1":
-                self.window.blit(ficha, (35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] + 20))
-            elif casilla == "CIELO3":
-                self.window.blit(ficha, (35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] - 40))
-            elif casilla == "CIELO2":
-                self.window.blit(ficha, (20 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30))
-            elif casilla == "CIELO4":
-                self.window.blit(ficha, (-40 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30))
+    def dibujar_metas(self, i, casilla, ficha):
+        if casilla == "CIELO1":
+            self.window.blit(ficha, (35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] + 20))
+            self.coordenadas_fichas[i] = ((35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] + 20), 1)
+        elif casilla == "CIELO3":
+            self.window.blit(ficha, (35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] - 40))
+            self.coordenadas_fichas[i] = ((35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] - 40), 3)
+        elif casilla == "CIELO2":
+            self.window.blit(ficha, (20 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30))
+            self.coordenadas_fichas[i] = ((20 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30), 2)
+        elif casilla == "CIELO4":
+            self.window.blit(ficha, (-40 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30))
+            self.coordenadas_fichas[i] = ((-40 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30), 4)
 
     def mostrar_mensaje(self, mensaje):
         """Actualiza el mensaje actual y el tiempo de visualización"""

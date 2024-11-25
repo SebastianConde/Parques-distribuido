@@ -507,15 +507,6 @@ class Cliente:
                                     self.client_socket.sendall("dados".encode('utf-8'))
                                     self.esperando_dados_inicio = False
                                     time.sleep(0.2)
-
-                            if self.esperando_ficha_sacar:
-                                for key, (value, color_ficha) in self.juego.coordenadas_fichas.items():
-                                    x, y = value
-                                    if x <= event.pos[0] <= x+20 and y <= event.pos[1] <= y+20:
-                                        self.client_socket.sendall(f"sacar_ficha:{key}".encode('utf-8'))
-                                        self.esperando_ficha_sacar = False
-                                        self.mostrar_mensaje(f"La ficha {key} ha sido retirada.")
-                                        break
                             
                             if self.x_ventana-20 <= event.pos[0] <= self.x_ventana+10 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados and len(self.actualizar_ventana_dados) == 0:
                                 if self.ficha_a_guardar[1] == self.color or self.ficha_a_guardar == None:
@@ -552,11 +543,22 @@ class Cliente:
 
                             for key, (value, color_ficha) in self.juego.coordenadas_fichas.items():
                                 x, y = value
+                                print(key, value, color_ficha, x, y)
                                 if x <= event.pos[0] <= x+20 and y <= event.pos[1] <= y+20 and self.turno and not self.estoy_ventana_dados and len(self.actualizar_ventana_dados) < 2 and self.esperando_fichas and color_ficha == self.color and not (260 <= event.pos[0] <= 440 and 260 <= event.pos[1] <= 440) and not any([x1 <= event.pos[0] <= x2 and y1 <= event.pos[1] <= y2 for x1, y1, x2, y2 in MP.carceles.values()]): 
                                     self.x_ventana = x
                                     self.y_ventana = y 
                                     self.ficha_a_guardar = (key, color_ficha)
                                     self.ventana_dados = True
+
+                            if self.esperando_ficha_sacar:
+                                for key, (value, color_ficha) in self.juego.coordenadas_fichas.items():
+                                    x, y = value
+                                    print(key, value, color_ficha, x, y)
+                                    if x <= event.pos[0] <= x+20 and y <= event.pos[1] <= y+20:
+                                        self.client_socket.sendall(f"sacar_ficha:{key}".encode('utf-8'))
+                                        self.esperando_ficha_sacar = False
+                                        self.mostrar_mensaje(f"La ficha {key} ha sido retirada.")
+                                        break
 
 
                     if self.ventana_actual == "JUEGO":
