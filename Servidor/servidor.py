@@ -319,8 +319,7 @@ class Server:
                                     if not pos_fichas:
                                         self.send_message(client_socket, "Movimiento de fichas no válido. Inténtalo de nuevo.")
                                         self.intentos_fallidos += 1
-                                        if self.intentos_fallidos == 2:
-                                            self.parques.cambiar_turno()
+                                        if self.intentos_fallidos == 3:
                                             self.intentos_fallidos = 0
                                             return
                                         time.sleep(0.2)
