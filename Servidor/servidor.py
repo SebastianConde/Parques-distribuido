@@ -24,6 +24,7 @@ class Server:
         self.message_queues = {}  # Diccionario para almacenar colas de mensajes por cliente
         self.player_colors_and_positions = {}  # Diccionario para almacenar colores y posiciones de los jugadores
         self.dados_inicio = []
+        self.intentos_fallidos = 0
 
     def broadcast(self, message, exclude_socket=None):
         for client_socket, _ in self.clients:
@@ -276,8 +277,13 @@ class Server:
                             self.parques.cambiar_turno()
                             continue
                     else:
-                        time.sleep(0.2)  # Pausa antes de anunciar turno
-                        self.send_message(client_socket, "Es tu turno. Lanza los dados y cuenta con tus fichas.")
+                        if self.parques.verificar_condicion_un_dado(jugador):
+                            time.sleep(0.2)
+                            self.send_message(client_socket, "Es tu turno. Lanza el dado y cuenta con tu ficha.")
+                        else:
+                            time.sleep(0.2)  # Pausa antes de anunciar turno
+                            self.send_message(client_socket, "Es tu turno. Lanza los dados y cuenta con tus fichas.")
+
                         respuesta = client_socket.recv(1024).decode('utf-8')
 
                         if respuesta == "dados":
@@ -285,6 +291,7 @@ class Server:
                             turn_message = f"{socket_player_name} lanza {valor_dados}."
                             time.sleep(0.2)  # Pausa antes de anunciar resultado
                             self.broadcast(turn_message)
+                            
                             def solicitar_y_mover_fichas(client_socket, socket_player_name, valor_dados):
                                 """Maneja la solicitud y movimiento de fichas"""
                                 time.sleep(0.2)
@@ -311,6 +318,11 @@ class Server:
                                     pos_fichas = self.parques.movimiento_fichas(dado1, dado2, ficha1, ficha2)
                                     if not pos_fichas:
                                         self.send_message(client_socket, "Movimiento de fichas no válido. Inténtalo de nuevo.")
+                                        self.intentos_fallidos += 1
+                                        if self.intentos_fallidos == 2:
+                                            self.parques.cambiar_turno()
+                                            self.intentos_fallidos = 0
+                                            return
                                         time.sleep(0.2)
                                         self.send_message(client_socket, "Dame las fichas")
                                 
@@ -349,12 +361,14 @@ class Server:
                                             ficha_sacar = jugador.fichas[ficha_sacar]
                                             self.player_colors_and_positions[socket_player_name] = (ficha_sacar.color, self.parques.obtener_posiciones_fichas())
                                         self.parques.cambiar_turno()
+                                        self.intentos_fallidos = 0
                                     else:
                                         solicitar_y_mover_fichas(client_socket, socket_player_name, valor_dados)
                             else: # Impar
                                 solicitar_y_mover_fichas(client_socket, socket_player_name, valor_dados)
                                 jugador.pares_consecutivos = 0
                                 self.parques.cambiar_turno()
+                                self.intentos_fallidos = 0
 
                             if self.parques.ganador:
                                 time.sleep(0.3)  # Pausa más larga antes de anunciar ganador

@@ -96,6 +96,9 @@ class Tablero:
             return True
         return False
     
+    def verificar_movimiento_valido(self, ficha, valor_dado):
+        return (valor_dado - ficha.contador) <= 72
+    
     def mover_ficha(self, ficha, cantidad):
         if cantidad - ficha.contador > 72:
             print("Movimiento no permitido")

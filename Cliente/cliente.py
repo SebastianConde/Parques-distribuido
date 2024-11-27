@@ -39,6 +39,7 @@ class Cliente:
         self.posiciones_fichas = []
         self.player_colors_and_positions = None
         self.ventana_dados = False
+        self.un_solo_dado = False
 
         # Variables x y y para las coordenadas de la ventana dados por ficha
         self.x_ventana = 0
@@ -169,10 +170,15 @@ class Cliente:
                 time.sleep(3)
             elif "Esperando a que tiren los dados" in mensaje:
                 self.mostrar_mensaje(mensaje)
-            elif "Es tu turno" in mensaje:
+            elif "Es tu turno. Lanza los dados" in mensaje:
                 self.turno = True
                 self.esperando_respuesta = True
                 self.mostrar_mensaje(mensaje)
+            elif "Es tu turno. Lanza el dado" in mensaje:
+                self.turno = True
+                self.esperando_respuesta = True
+                self.mostrar_mensaje(mensaje)
+                self.un_solo_dado = True
             elif "Espera tu turno" in mensaje:
                 self.mostrar_mensaje(mensaje)
             elif "lanza" in mensaje:
@@ -212,21 +218,41 @@ class Cliente:
                                         nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
                                         nueva_pos = "AZUL"+nueva_pos
                                         nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "3":
+                                            nueva_pos = "CIELO3"
+                                            nuevas_posiciones.append(nueva_pos)
                                 if color == "1":
                                     if "CAMINO_CIELO" in pos:
                                         nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
                                         nueva_pos = "ROJO"+nueva_pos
                                         nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "1":
+                                            nueva_pos = "CIELO1"
+                                            nuevas_posiciones.append(nueva_pos)
                                 elif color == "2":
                                     if "CAMINO_CIELO" in pos:
                                         nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
                                         nueva_pos = "AMARILLO"+nueva_pos
                                         nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "2":
+                                            nueva_pos = "CIELO2"
+                                            nuevas_posiciones.append(nueva_pos)
                                 elif color == "4":
                                     if "CAMINO_CIELO" in pos:
                                         nueva_pos = pos.replace("CAMINO_CIELO:", "").strip()
                                         nueva_pos = "VERDE"+nueva_pos
                                         nuevas_posiciones.append(nueva_pos)
+                                    else:
+                                        nueva_pos = pos.replace("CIELO", "").strip()
+                                        if nueva_pos == "4":
+                                            nueva_pos = "CIELO4"
+                                            nuevas_posiciones.append(nueva_pos)
                             else:
                                 nuevas_posiciones.append(pos)
                         self.juego.jugadores[self.nombre]["posiciones"] = nuevas_posiciones
@@ -564,7 +590,11 @@ class Cliente:
                     if self.ventana_actual == "JUEGO":
                         self.juego.actualizar_pantalla()
                         if self.dado1 and self.dado2:
-                            self.juego.dibujar_dados(self.dado1, self.dado2)
+                            if self.un_solo_dado:
+                                self.dado2 = 0
+                                self.juego.dibujar_dados(self.dado1, 0)
+                            else:
+                                self.juego.dibujar_dados(self.dado1, self.dado2)
                         else:
                             self.juego.dibujar_dados(6, 6)
                         if self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados:

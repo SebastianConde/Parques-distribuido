@@ -31,6 +31,14 @@ class Parques:
         self.jugador_actual = self.jugadores[(self.jugadores.index(self.jugador_actual) + 1) % len(self.jugadores)]
         self.jugador_actual.turno = True
 
+    def verificar_condicion_un_dado(self, jugador):
+        fichas_en_cielo = [ficha for ficha in jugador.fichas if ficha.casilla.tipo == TipoDeCelda.CIELO]
+        fichas_camino_cielo = [ficha for ficha in jugador.fichas if ficha.casilla.tipo == TipoDeCelda.CAMINO_CIELO]
+        
+        if len(fichas_camino_cielo) == 1 and len(fichas_en_cielo) == (len(jugador.fichas) - 1):
+            return True
+        return False
+
     def movimiento_fichas(self, valor_dado1, valor_dado2, ficha1, ficha2):
         ficha1 = self.jugador_actual.fichas[ficha1]
         ficha2 = self.jugador_actual.fichas[ficha2]
