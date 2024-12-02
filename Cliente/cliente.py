@@ -535,31 +535,28 @@ class Cliente:
                                     time.sleep(0.2)
                             
                             if self.x_ventana-20 <= event.pos[0] <= self.x_ventana+10 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados and len(self.actualizar_ventana_dados) == 0:
-                                if self.ficha_a_guardar[1] == self.color or self.ficha_a_guardar == None:
-                                    self.estoy_ventana_dados = True
+                                self.estoy_ventana_dados = True
+                                self.actualizar_ventana_dados.append(2)
+                                tupla = (self.ficha_a_guardar[0], self.dado1)
+                                self.fichas_a_mover.append(tupla)
+                                self.ventana_dados = False
+                            elif self.x_ventana+10 <= event.pos[0] <= self.x_ventana+40 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados and len(self.actualizar_ventana_dados) == 0:
+                                self.estoy_ventana_dados = True
+                                self.actualizar_ventana_dados.append(1)
+                                tupla = (self.ficha_a_guardar[0], self.dado2)
+                                self.fichas_a_mover.append(tupla)
+                                self.ventana_dados = False
+
+                            if self.x_ventana-5 <= event.pos[0] <= self.x_ventana+25 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and len(self.actualizar_ventana_dados) > 0 and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados:
+                                self.estoy_ventana_dados = True
+                                if 1 in self.actualizar_ventana_dados:
                                     self.actualizar_ventana_dados.append(2)
                                     tupla = (self.ficha_a_guardar[0], self.dado1)
                                     self.fichas_a_mover.append(tupla)
-                                    self.ventana_dados = False
-                            elif self.x_ventana+10 <= event.pos[0] <= self.x_ventana+40 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados and len(self.actualizar_ventana_dados) == 0:
-                                if self.ficha_a_guardar[1] == self.color or self.ficha_a_guardar == None:
-                                    self.estoy_ventana_dados = True
+                                else:
                                     self.actualizar_ventana_dados.append(1)
                                     tupla = (self.ficha_a_guardar[0], self.dado2)
                                     self.fichas_a_mover.append(tupla)
-                                    self.ventana_dados = False
-
-                            if self.x_ventana-5 <= event.pos[0] <= self.x_ventana+25 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and len(self.actualizar_ventana_dados) > 0 and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados:
-                                if self.ficha_a_guardar[1] == self.color or self.ficha_a_guardar == None:
-                                    self.estoy_ventana_dados = True
-                                    if 1 in self.actualizar_ventana_dados:
-                                        self.actualizar_ventana_dados.append(2)
-                                        tupla = (self.ficha_a_guardar[0], self.dado1)
-                                        self.fichas_a_mover.append(tupla)
-                                    else:
-                                        self.actualizar_ventana_dados.append(1)
-                                        tupla = (self.ficha_a_guardar[0], self.dado2)
-                                        self.fichas_a_mover.append(tupla)
 
                             if self.actualizar_ventana_dados != []:
                                 self.ventana_dados = False
@@ -580,6 +577,9 @@ class Cliente:
                                 for key, (value, color_ficha) in self.juego.coordenadas_fichas.items():
                                     x, y = value
                                     print(key, value, color_ficha, x, y)
+                                    for jugador in self.juego.jugadores:
+                                        print(jugador)
+                                    
                                     if x <= event.pos[0] <= x+20 and y <= event.pos[1] <= y+20:
                                         self.client_socket.sendall(f"sacar_ficha:{key}".encode('utf-8'))
                                         self.esperando_ficha_sacar = False

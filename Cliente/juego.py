@@ -27,6 +27,7 @@ class JuegoParques:
 
         # Cargar imagenes de los dados
         self.dado ={
+            0: pygame.transform.scale(pygame.image.load("images/0_dot.png"), (90, 90)),
             1: pygame.transform.scale(pygame.image.load("images/1_dot.png"), (90, 90)),
             2: pygame.transform.scale(pygame.image.load("images/2_dots.png"), (90, 90)),
             3: pygame.transform.scale(pygame.image.load("images/3_dots.png"), (90, 90)),

@@ -370,6 +370,51 @@ class Server:
                                 self.intentos_fallidos = 0
 
                             if self.parques.ganador:
+                                fichas_en_carcel = []
+                                fichas_en_cielo = []
+                                fichas_cielo = []
+
+                                for jugador in self.parques.jugadores:
+                                    for ficha in jugador.fichas:
+                                        if ficha.casilla == self.parques.tablero.casillas[TipoDeCelda.CARCEL][ficha.color - 1]:
+                                            fichas_en_carcel.append({
+                                                'numero': ficha.numero, 
+                                                'color': ficha.color, 
+                                                'pos': -1
+                                            })
+                                        
+                                        for casilla_cielo in self.parques.tablero.casillas[TipoDeCelda.CAMINO_CIELO]:
+                                            if ficha.casilla == casilla_cielo:
+                                                fichas_en_cielo.append({
+                                                    'numero': ficha.numero, 
+                                                    'color': ficha.color, 
+                                                    'pos': str(casilla_cielo.numero)
+                                                })
+
+                                        for cielo in self.parques.tablero.casillas[TipoDeCelda.CIELO]:
+                                            if ficha.casilla == cielo:
+                                                fichas_cielo.append({
+                                                    'numero': ficha.numero, 
+                                                    'color': ficha.color, 
+                                                    'pos': f"CIELO{cielo.numero}"
+                                                })
+
+                                initial_positions_message = "Posiciones iniciales: "
+                                for nombre, (color, posiciones) in self.player_colors_and_positions.items():
+                                    for ficha in fichas_en_carcel + fichas_en_cielo + fichas_cielo: 
+                                        if ficha['color'] == color:
+                                            if isinstance(ficha['pos'], int):
+                                                posiciones[ficha['numero'] - 1] = ficha['pos']
+                                            elif isinstance(ficha['pos'], str):
+                                                if "CIELO" in ficha['pos']:
+                                                    posiciones[ficha['numero'] - 1] = f"{ficha['pos']}"
+                                                else:
+                                                    posiciones[ficha['numero'] - 1] = f"CAMINO_CIELO:{ficha['pos']}"
+                                    
+                                    initial_positions_message += f"{nombre}.{color}.{posiciones};"
+
+                                self.broadcast(initial_positions_message)
+
                                 time.sleep(0.3)  # Pausa más larga antes de anunciar ganador
                                 winner_message = f"El ganador es {socket_player_name}!"
                                 self.broadcast(winner_message)
@@ -419,7 +464,6 @@ class Server:
                                     initial_positions_message += f"{nombre}.{color}.{posiciones};"
 
                                 self.broadcast(initial_positions_message)
-                                
                 else:
                     time.sleep(0.2)  # Pausa antes de mensaje de espera
                     self.send_message(client_socket, "Espera tu turno.")
