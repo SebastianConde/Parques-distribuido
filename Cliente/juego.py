@@ -452,44 +452,54 @@ class JuegoParques:
                     self.window.blit(ficha, pos)
             else:  # Casilla de llegada
                 for (ficha, color, nombre, indice) in fichas:
-                    self.dibujar_metas(indice, casilla, fichas[0][0])
+                    self.dibujar_metas(indice, casilla, fichas[0][0], color, nombre)
                 
                                     
     def crear_ventana_dados(self, x, y, valor1, valor2, valor_disponible):
         """Crea la ventana de los dados y obtiene los valores de los dados"""
-        if valor_disponible == []:
-            dado1 = pygame.transform.scale(self.dado[valor1], (30,30))
-            dado2 = pygame.transform.scale(self.dado[valor2], (30,30))
-            pygame.draw.rect(self.window, (255, 255, 255), (x-20, y-30, 60, 30), border_radius=2) # Dibujar el rectángulo
-            self.window.blit(dado1, (x-20, y-30, x, y)) # Dibujar el valor del dado 1
-            self.window.blit(dado2, (x+10, y-30, x+40, y)) # Dibujar el valor del dado 2
-            pygame.draw.polygon(self.window, (255, 128, 0), [(x, y), (x+10, y+10), (x+20, y)]) #Dibujar triangulo/flecha
+        if valor2 != 0:
+            if valor_disponible == []:
+                dado1 = pygame.transform.scale(self.dado[valor1], (30,30))
+                dado2 = pygame.transform.scale(self.dado[valor2], (30,30))
+                pygame.draw.rect(self.window, (255, 255, 255), (x-20, y-30, 60, 30), border_radius=2) # Dibujar el rectángulo
+                self.window.blit(dado1, (x-20, y-30, x, y)) # Dibujar el valor del dado 1
+                self.window.blit(dado2, (x+10, y-30, x+40, y)) # Dibujar el valor del dado 2
+                pygame.draw.polygon(self.window, (255, 128, 0), [(x, y), (x+10, y+10), (x+20, y)]) #Dibujar triangulo/flecha
+            else:
+                for valor in valor_disponible:
+                    if valor == 1:
+                        dado1 = pygame.transform.scale(self.dado[valor1], (30,30))
+                        pygame.draw.rect(self.window, (255, 255, 255), (x-5, y-30, 30, 30), border_radius=2) # Dibujar el rectángulo
+                        self.window.blit(dado1, (x-5, y-30, x+25, y)) # Dibujar el valor del dado 1
+                        pygame.draw.polygon(self.window, (255, 128, 0), [(x, y), (x+10, y+10), (x+20, y)]) #Dibujar triangulo/flecha
+                    else:
+                        dado2 = pygame.transform.scale(self.dado[valor2], (30,30))
+                        pygame.draw.rect(self.window, (255, 255, 255), (x-5, y-30, 30, 30), border_radius=2) # Dibujar el rectángulo
+                        self.window.blit(dado2, (x-5, y-30, x+25, y)) # Dibujar el valor del dado 2
+                        pygame.draw.polygon(self.window, (255, 128, 0), [(x, y), (x+10, y+10), (x+20, y)]) #Dibujar triangulo/flecha
         else:
-            for valor in valor_disponible:
-                if valor == 1:
-                    dado1 = pygame.transform.scale(self.dado[valor1], (30,30))
-                    pygame.draw.rect(self.window, (255, 255, 255), (x-5, y-30, 30, 30), border_radius=2) # Dibujar el rectángulo
-                    self.window.blit(dado1, (x-5, y-30, x+25, y)) # Dibujar el valor del dado 1
-                    pygame.draw.polygon(self.window, (255, 128, 0), [(x, y), (x+10, y+10), (x+20, y)]) #Dibujar triangulo/flecha
-                else:
-                    dado2 = pygame.transform.scale(self.dado[valor2], (30,30))
-                    pygame.draw.rect(self.window, (255, 255, 255), (x-5, y-30, 30, 30), border_radius=2) # Dibujar el rectángulo
-                    self.window.blit(dado2, (x-5, y-30, x+25, y)) # Dibujar el valor del dado 2
-                    pygame.draw.polygon(self.window, (255, 128, 0), [(x, y), (x+10, y+10), (x+20, y)]) #Dibujar triangulo/flecha
+            dado = pygame.transform.scale(self.dado[valor1], (30,30))
+            pygame.draw.rect(self.window, (255, 255, 255), (x-5, y-30, 30, 30), border_radius=2) # Dibujar el rectángulo
+            self.window.blit(dado, (x-5, y-30, x+25, y)) # Dibujar el valor del dado
+            pygame.draw.polygon(self.window, (255, 128, 0), [(x, y), (x+10, y+10), (x+20, y)]) #Dibujar triangulo/flecha
 
-    def dibujar_metas(self, i, casilla, ficha):
+    def dibujar_metas(self, i, casilla, ficha, color, nombre):
         if casilla == "CIELO1":
             self.window.blit(ficha, (35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] + 20))
-            self.coordenadas_fichas[i] = ((35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] + 20), 1)
+            if nombre == self.nombre_jugador:
+                self.coordenadas_fichas[i] = ((35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] + 20), color)
         elif casilla == "CIELO3":
             self.window.blit(ficha, (35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] - 40))
-            self.coordenadas_fichas[i] = ((35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] - 40), 3)
+            if nombre == self.nombre_jugador:
+                self.coordenadas_fichas[i] = ((35 + MP.meta[casilla][0] + i * 30, MP.meta[casilla][1] - 40), color)
         elif casilla == "CIELO2":
             self.window.blit(ficha, (20 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30))
-            self.coordenadas_fichas[i] = ((20 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30), 2)
+            if nombre == self.nombre_jugador:
+                self.coordenadas_fichas[i] = ((20 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30), color)
         elif casilla == "CIELO4":
             self.window.blit(ficha, (-40 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30))
-            self.coordenadas_fichas[i] = ((-40 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30), 4)
+            if nombre == self.nombre_jugador:
+                self.coordenadas_fichas[i] = ((-40 + MP.meta[casilla][0], 35 + MP.meta[casilla][1] + i * 30), color)
 
     def mostrar_mensaje(self, mensaje):
         """Actualiza el mensaje actual y el tiempo de visualización"""
@@ -567,12 +577,15 @@ class JuegoParques:
                 self.window.blit(mensaje_surface, (705, y))
                 y += self.font_mensajes.get_linesize()  # Aumentar y por el alto de la línea
 
-    def dibujar_dados(self, dado1, dado2):
+    def dibujar_dados(self, dado1, dado2=None):
         """Dibuja los dados en la pantalla y muestra el mensaje"""
         self.dibujar_mensaje_dados(120)
-
-        self.window.blit(self.dado[dado1], (705, 500))
-        self.window.blit(self.dado[dado2], (805, 500))
+        if dado2 is None:
+            self.window.blit(self.dado[dado1], (705, 500))
+        else:
+            self.window.blit(self.dado[dado1], (705, 500))
+            self.window.blit(self.dado[dado2], (805, 500))
+        
 
     def actualizar_pantalla(self):
         """Actualiza todos los elementos en la pantalla"""

@@ -25,6 +25,7 @@ class Server:
         self.player_colors_and_positions = {}  # Diccionario para almacenar colores y posiciones de los jugadores
         self.dados_inicio = []
         self.intentos_fallidos = 0
+        self.intentos_maximos = 3
 
     def broadcast(self, message, exclude_socket=None):
         for client_socket, _ in self.clients:
@@ -288,7 +289,11 @@ class Server:
 
                         if respuesta == "dados":
                             valor_dados = self.parques.lanzar_dados()
-                            turn_message = f"{socket_player_name} lanza {valor_dados}."
+                            if self.parques.verificar_condicion_un_dado(jugador):
+                                self.intentos_maximos = 1
+                                turn_message = f"{socket_player_name} lanza ({valor_dados[0]}) y cuenta con su ficha."
+                            else:
+                                turn_message = f"{socket_player_name} lanza {valor_dados}."
                             time.sleep(0.2)  # Pausa antes de anunciar resultado
                             self.broadcast(turn_message)
                             
@@ -319,7 +324,7 @@ class Server:
                                     if not pos_fichas:
                                         self.send_message(client_socket, "Movimiento de fichas no válido. Inténtalo de nuevo.")
                                         self.intentos_fallidos += 1
-                                        if self.intentos_fallidos == 3:
+                                        if self.intentos_fallidos == self.intentos_maximos:
                                             self.intentos_fallidos = 0
                                             return
                                         time.sleep(0.2)
