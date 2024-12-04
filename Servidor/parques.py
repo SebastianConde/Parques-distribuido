@@ -20,6 +20,7 @@ class Parques:
     def agregar_jugador(self, nombre, color):
         jugador = Jugador(nombre, color, self.tablero.casillas[TipoDeCelda.CARCEL][color - 1])
         self.jugadores.append(jugador)
+        self.jugadores.sort(key=lambda jugador: jugador.color)
     def iniciar(self, jugador):
         self.jugador_actual = jugador
         jugador.turno = True
