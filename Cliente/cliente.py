@@ -177,8 +177,8 @@ class Cliente:
             elif "Es tu turno. Lanza el dado" in mensaje:
                 self.turno = True
                 self.esperando_respuesta = True
-                self.mostrar_mensaje(mensaje)
                 self.un_solo_dado = True
+                self.mostrar_mensaje(mensaje)
             elif "Espera tu turno" in mensaje:
                 self.mostrar_mensaje(mensaje)
             elif "lanza" in mensaje:
@@ -547,18 +547,14 @@ class Cliente:
                                     time.sleep(0.2)
                             
                             if self.x_ventana-20 <= event.pos[0] <= self.x_ventana+10 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados and len(self.actualizar_ventana_dados) == 0:
-                                print("Estoy en la ventana de los dados 1")
                                 if self.ficha_a_guardar[1] == self.color or self.ficha_a_guardar == None:  
-                                    print("Estoy en la ventana de los dados 1.1")  
                                     self.estoy_ventana_dados = True
                                     self.actualizar_ventana_dados.append(2)
                                     tupla = (self.ficha_a_guardar[0], self.dado1)
                                     self.fichas_a_mover.append(tupla)
                                     self.ventana_dados = False
                             elif self.x_ventana+10 <= event.pos[0] <= self.x_ventana+40 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados and len(self.actualizar_ventana_dados) == 0:
-                                print("Estoy en la ventana de los dados 2, ficha a guardar:", self.ficha_a_guardar, "color:", self.color)
                                 if self.ficha_a_guardar[1] == self.color or self.ficha_a_guardar == None:  
-                                    print("Estoy en la ventana de los dados 2.1")  
                                     self.estoy_ventana_dados = True
                                     self.actualizar_ventana_dados.append(1)
                                     tupla = (self.ficha_a_guardar[0], self.dado2)
@@ -581,9 +577,10 @@ class Cliente:
                                 if self.x_ventana-5 <= event.pos[0] <= self.x_ventana+25 and self.y_ventana-30 <= event.pos[1] <= self.y_ventana and self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados:
                                     self.estoy_ventana_dados = True
                                     if self.ficha_a_guardar[1] == self.color or self.ficha_a_guardar == None:
-                                        self.actualizar_ventana_dados.append(1)
+                                        self.actualizar_ventana_dados.append(2)
                                         tupla = (self.ficha_a_guardar[0], self.dado1)
                                         self.fichas_a_mover.append(tupla)
+                                        print("Agregamos:", tupla)
                                         self.ventana_dados = False
 
                             if self.actualizar_ventana_dados != []:
@@ -596,9 +593,7 @@ class Cliente:
                                 x, y = value
                                 x = float(x)
                                 y = float(y)
-                                print("Coordenadas de la ficha:", x, y, "Turno:", self.turno, "Estoy en la ventana de los dados:", self.estoy_ventana_dados, "Esperando fichas:", self.esperando_fichas, "No estoy en la cárcel:", not any([x1 <= event.pos[0] <= x2 and y1 <= event.pos[1] <= y2 for x1, y1, x2, y2 in MP.carceles.values()]), "Lista de actualizar ventana dados:", len(self.actualizar_ventana_dados), "Fichas a mover:", len(self.fichas_a_mover), "Está en el cielo:", not (260 <= event.pos[0] <= 440 and 260 <= event.pos[1] <= 440))
                                 if x <= event.pos[0] <= x+20 and y <= event.pos[1] <= y+20 and self.turno and not self.estoy_ventana_dados and len(self.actualizar_ventana_dados) < 2 and self.esperando_fichas and not (260 <= event.pos[0] <= 440 and 260 <= event.pos[1] <= 440) and not any([x1 <= event.pos[0] <= x2 and y1 <= event.pos[1] <= y2 for x1, y1, x2, y2 in MP.carceles.values()]):
-                                    print("Asigne la x_ventana y y_ventana con los valores:", x, y, "y la ficha a guardar:", key, color_ficha) 
                                     self.x_ventana = x
                                     self.y_ventana = y 
                                     self.ficha_a_guardar = (key, color_ficha)
@@ -634,11 +629,11 @@ class Cliente:
                             self.x_ventana = 0
                             self.y_ventana = 0
                         if len(self.actualizar_ventana_dados) == 1 and self.un_solo_dado:
+                            print("RESETEAMOS VENTANA PARA CASO DE UN SOLO DADO")
                             self.actualizar_ventana_dados = []
                             self.ventana_dados = False
                             self.x_ventana = 0
                             self.y_ventana = 0
-                            self.un_solo_dado = False
                         if len(self.fichas_a_mover) == 2 and self.esperando_fichas:
                             self.client_socket.sendall(f"mover_fichas:{self.fichas_a_mover[0][0]},{self.fichas_a_mover[0][1]},{self.fichas_a_mover[1][0]},{self.fichas_a_mover[1][1]}".encode('utf-8'))
                             self.fichas_a_mover = []
@@ -649,6 +644,14 @@ class Cliente:
                             else:
                                 self.esperando_respuesta = False
                                 self.turno = False
+                        if len(self.fichas_a_mover) == 1 and self.un_solo_dado:
+                            print("Hola, mandé:", self.fichas_a_mover[0][0], self.fichas_a_mover[0][1], self.dado1, self.dado2)
+                            self.client_socket.sendall(f"mover_fichas:{self.fichas_a_mover[0][0]},{self.dado1}".encode('utf-8'))
+                            self.fichas_a_mover = []
+                            self.un_solo_dado = False
+                            self.esperando_respuesta = False
+                            self.esperando_fichas = False
+                            self.turno = False
 
                     pygame.display.flip()
                 

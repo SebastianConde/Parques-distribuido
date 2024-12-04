@@ -10,6 +10,12 @@ class Parques:
         self.dados = Dados()
         self.jugador_actual = None
         self.ganador = None
+
+    def verificar_si_alguna_ficha_puede_moverse(self, jugador):
+        for ficha in jugador.fichas:
+            if ficha.puede_moverse:
+                return True
+        return False
     
     def agregar_jugador(self, nombre, color):
         jugador = Jugador(nombre, color, self.tablero.casillas[TipoDeCelda.CARCEL][color - 1])
