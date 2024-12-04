@@ -186,6 +186,8 @@ class Cliente:
                 if "ha salido de la cárcel" in mensaje:
                     self.turno = False
                     self.esperando_respuesta = False
+                    pygame.mixer.music.load("sounds/salir_carcel.mp3")
+                    pygame.mixer.music.play()
                 elif "y no ha podido salir de la cárcel" in mensaje:
                     self.turno = True
                     self.esperando_respuesta = True
@@ -431,6 +433,10 @@ class Cliente:
             elif "Lo sentimos, hay un juego en curso." in mensaje:
                 self.mostrar_mensaje_con_delay(mensaje)
                 self.estado_actual = "MENU"
+            elif "El ganador es" in mensaje:
+                pygame.mixer.music.load("sounds/ganador.wav")
+                pygame.mixer.music.play()
+                self.mostrar_mensaje(mensaje)
             else:
                 self.mostrar_mensaje(mensaje)
 
@@ -539,9 +545,13 @@ class Cliente:
                         if event.type == pygame.MOUSEBUTTONDOWN:
                             if 700 <= event.pos[0] <= 900 and 500 <= event.pos[1] <= 700:
                                 if self.esperando_respuesta and self.turno and not self.esperando_fichas:
+                                    pygame.mixer.music.load("sounds/dados.mp3")
+                                    pygame.mixer.music.play()
                                     self.client_socket.sendall("dados".encode('utf-8'))
                                     time.sleep(0.2)
                                 elif self.esperando_dados_inicio:
+                                    pygame.mixer.music.load("sounds/dados.mp3")
+                                    pygame.mixer.music.play()
                                     self.client_socket.sendall("dados".encode('utf-8'))
                                     self.esperando_dados_inicio = False
                                     time.sleep(0.2)
@@ -605,6 +615,8 @@ class Cliente:
                                     x = float(x)
                                     y = float(y)
                                     if x <= event.pos[0] <= x+20 and y <= event.pos[1] <= y+20:
+                                        pygame.mixer.music.load("sounds/sacar_ficha.wav")
+                                        pygame.mixer.music.play()
                                         self.client_socket.sendall(f"sacar_ficha:{key}".encode('utf-8'))
                                         self.esperando_ficha_sacar = False
                                         self.mostrar_mensaje(f"La ficha {key} ha sido retirada.")
@@ -635,6 +647,8 @@ class Cliente:
                             self.x_ventana = 0
                             self.y_ventana = 0
                         if len(self.fichas_a_mover) == 2 and self.esperando_fichas:
+                            pygame.mixer.music.load("sounds/ficha.mp3")
+                            pygame.mixer.music.play()
                             self.client_socket.sendall(f"mover_fichas:{self.fichas_a_mover[0][0]},{self.fichas_a_mover[0][1]},{self.fichas_a_mover[1][0]},{self.fichas_a_mover[1][1]}".encode('utf-8'))
                             self.fichas_a_mover = []
                             self.esperando_fichas = False
@@ -646,6 +660,8 @@ class Cliente:
                                 self.turno = False
                         if len(self.fichas_a_mover) == 1 and self.un_solo_dado:
                             print("Hola, mandé:", self.fichas_a_mover[0][0], self.fichas_a_mover[0][1], self.dado1, self.dado2)
+                            pygame.mixer.music.load("sounds/ficha.mp3")
+                            pygame.mixer.music.play()
                             self.client_socket.sendall(f"mover_fichas:{self.fichas_a_mover[0][0]},{self.dado1}".encode('utf-8'))
                             self.fichas_a_mover = []
                             self.un_solo_dado = False

@@ -5,6 +5,7 @@ import os
 class Menu:
     def __init__(self, cliente):
         pygame.init()
+        pygame.mixer.init()
         self.pantalla = pygame.display.set_mode((700, 700))
         self.fuente = pygame.font.Font(None, 36)
         self.imagen_fondo = pygame.transform.scale(pygame.image.load(os.path.join('images/menu-carga.jpeg')), (700, 700))
@@ -89,6 +90,8 @@ class Menu:
             pygame.display.update()
 
     def menu(self):
+        pygame.mixer.music.load('sounds/menu.mp3') 
+        pygame.mixer.music.play(-1)
         while True:
             mouse_pos = pygame.mouse.get_pos()
 
@@ -124,4 +127,5 @@ class Menu:
             pygame.display.update()
 
     def close(self):
+        pygame.mixer.music.stop()
         pygame.quit()

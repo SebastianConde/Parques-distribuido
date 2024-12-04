@@ -6,6 +6,7 @@ import time
 class JuegoParques:
     def __init__(self, jugadores, nombre_jugador, color_dict):
         pygame.init()
+        pygame.mixer.init()
         self.WIDTH, self.HEIGHT = 900, 700
         self.window = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
         pygame.display.set_caption("Parqués")
