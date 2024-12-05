@@ -162,7 +162,10 @@ class Server:
                     self.send_message(client_socket, f"Bienvenid@, {nombre}!")
 
             while not self.juego_iniciado and client_socket in [s for s, _ in self.clients]:
-                if len(self.clients) >= 1:
+                if len(self.clients) == 1:
+                    time.sleep(1)
+                    continue
+                elif len(self.clients) >= 2:
                     while len(self.jugadores) != len(self.clients):
                         time.sleep(0.2)
                     self.send_message(client_socket, "¿Desean iniciar el juego ahora? (si/no)")
@@ -291,7 +294,7 @@ class Server:
                                 self.intentos_maximos = 1
                                 turn_message = f"{socket_player_name} lanza ({valor_dados[0]}) y cuenta con su ficha."
                             else:
-                                turn_message = f"{socket_player_name} lanza {valor_dados}."
+                                turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
                             time.sleep(0.2)  # Pausa antes de anunciar resultado
                             self.broadcast(turn_message)
                             
@@ -310,15 +313,25 @@ class Server:
                                         respuesta_fichas = client_socket.recv(1024).decode('utf-8')
                                     
                                     # Procesar respuesta
-                                    partes = respuesta_fichas.split(":")[1].split(",") 
-                                    ficha1 = int(partes[0])
-                                    dado1 = int(partes[1])
-                                    ficha2 = int(partes[2])
-                                    dado2 = int(partes[3])
-                                    print("Tengo las fichas: ", ficha1, ficha2)
-                                    
-                                    # Validar movimiento
-                                    pos_fichas = self.parques.movimiento_fichas(dado1, dado2, ficha1, ficha2)
+                                    if self.parques.verificar_condicion_un_dado(jugador):
+                                        partes = respuesta_fichas.split(":")[1].split(",")
+                                        ficha = int(partes[0])  
+                                        dado = int(partes[1])
+                                        print("Tengo la ficha: ", ficha)
+
+                                        # Validar movimiento
+                                        print("Dados: ", valor_dados, "Dado: ", dado)
+                                        pos_fichas = self.parques.movimiento_fichas(dado, 0, ficha, ficha)
+                                    else:
+                                        partes = respuesta_fichas.split(":")[1].split(",") 
+                                        ficha1 = int(partes[0])
+                                        dado1 = int(partes[1])
+                                        ficha2 = int(partes[2])
+                                        dado2 = int(partes[3])
+                                        print("Tengo las fichas: ", ficha1, ficha2)
+                                        
+                                        # Validar movimiento
+                                        pos_fichas = self.parques.movimiento_fichas(dado1, dado2, ficha1, ficha2)
                                     if not pos_fichas:
                                         self.send_message(client_socket, "Movimiento de fichas no válido. Inténtalo de nuevo.")
                                         self.intentos_fallidos += 1
@@ -334,13 +347,10 @@ class Server:
                                     pos_fichas
                                 )
                                 print("Movimiento de fichas exitoso")
-                                turn_message = f"{socket_player_name} lanza {valor_dados} y mueve sus fichas."
-                                time.sleep(0.2)
-                                self.broadcast(turn_message)
                                 
                                 return pos_fichas
 
-                            if self.parques.dados.es_par:
+                            if self.parques.dados.es_par:  # Par
                                 salio_de_carcel = False
                                 # Sacar fichas de la cárcel si lanzó par
                                 for ficha in jugador.fichas: 
@@ -365,12 +375,23 @@ class Server:
                                         self.parques.cambiar_turno()
                                         self.intentos_fallidos = 0
                                     else:
-                                        solicitar_y_mover_fichas(client_socket, socket_player_name, valor_dados)
+                                        if self.parques.verificar_condicion_un_dado(jugador):
+                                            solicitar_y_mover_fichas(client_socket, socket_player_name, valor_dados)
+                                            jugador.pares_consecutivos = 0
+                                            self.parques.cambiar_turno()
+                                            self.intentos_fallidos = 0
+                                        else:
+                                            solicitar_y_mover_fichas(client_socket, socket_player_name, valor_dados)
                             else: # Impar
-                                solicitar_y_mover_fichas(client_socket, socket_player_name, valor_dados)
-                                jugador.pares_consecutivos = 0
-                                self.parques.cambiar_turno()
-                                self.intentos_fallidos = 0
+                                if self.parques.verificar_si_alguna_ficha_puede_moverse(jugador): 
+                                    solicitar_y_mover_fichas(client_socket, socket_player_name, valor_dados)
+                                    jugador.pares_consecutivos = 0
+                                    self.parques.cambiar_turno()
+                                    self.intentos_fallidos = 0
+                                else:
+                                    self.parques.cambiar_turno()
+                                    self.intentos_fallidos = 0
+                                    jugador.pares_consecutivos = 0
 
                             if self.parques.ganador:
                                 fichas_en_carcel = []
@@ -473,6 +494,7 @@ class Server:
                     while self.parques.jugador_actual.nombre != socket_player_name:
                         time.sleep(0.5)  # Reducir la frecuencia de verificación
 
+                        
     def agregar_bots(self):
         """Agrega bots para completar el juego si hay menos de 4 jugadores."""
         contador_bots = 1
@@ -497,6 +519,8 @@ class Server:
     def manejar_bot(self, bot_nombre, bot_color):
         """Simula el comportamiento del bot en el juego."""
         while not self.parques.ganador:
+            print(f"Posiciones de {bot_nombre}: {self.player_colors_and_positions[bot_nombre]}")
+        
             jugador_actual = self.parques.jugador_actual
             if jugador_actual and jugador_actual.nombre == bot_nombre:
                 if jugador_actual.en_carcel:
@@ -539,8 +563,6 @@ class Server:
                     time.sleep(1)
                     self.broadcast(turn_message)
 
-                    self.mover_fichas_bot(bot_nombre, valor_dados)
-
                     if self.parques.dados.es_par:
                         salio_de_carcel = False
                         for ficha in jugador_actual.fichas:
@@ -554,16 +576,23 @@ class Server:
                             if jugador_actual.pares_consecutivos == 3:
                                 jugador_actual.pares_consecutivos = 0
                                 self.parques.sacar_ficha(random.choice([0, 1, 2, 3]))
-                                #self.parques.cambiar_turno()
-                            else:
-                                self.mover_fichas_bot(bot_nombre, valor_dados)
+                                self.player_colors_and_positions[bot_nombre] = (self.player_colors_and_positions[bot_nombre][0], self.parques.obtener_posiciones_fichas())
+                                self.parques.cambiar_turno()
+                                self.intentos_fallidos = 0
+                            else: 
+                                if self.parques.verificar_condicion_un_dado(jugador_actual):
+                                    self.mover_fichas_bot(bot_nombre, valor_dados)
+                                    jugador_actual.pares_consecutivos = 0
+                                    self.parques.cambiar_turno()
+                                    self.intentos_fallidos = 0
+                                else:
+                                    self.mover_fichas_bot(bot_nombre, valor_dados)
+
                     else: # Impar
                         self.mover_fichas_bot(bot_nombre, valor_dados)
                         jugador_actual.pares_consecutivos = 0
-
-                    # Cambiar turno
-                    self.parques.cambiar_turno()
-                    self.intentos_fallidos = 0
+                        self.parques.cambiar_turno()
+                        self.intentos_fallidos = 0
 
                     if self.parques.ganador:
                         fichas_en_carcel = []
@@ -648,7 +677,9 @@ class Server:
                         initial_positions_message = "Posiciones iniciales: "
                         for nombre, (color, posiciones) in self.player_colors_and_positions.items():
                             for ficha in fichas_en_carcel + fichas_en_cielo + fichas_cielo: 
+                                print(f"Ficha: {ficha}")
                                 if ficha['color'] == color:
+                                    print(f"Tipo de pos: {type(ficha['pos'])}, pos: {ficha['pos']}")
                                     if isinstance(ficha['pos'], int):
                                         posiciones[ficha['numero'] - 1] = ficha['pos']
                                     elif isinstance(ficha['pos'], str):
@@ -662,7 +693,7 @@ class Server:
                         self.broadcast(initial_positions_message)
             else:
                 time.sleep(0.5)  # Verificar nuevamente si es el turno del bot
-
+                
     def mover_fichas_bot(self, bot_nombre, valor_dados):
         # Obtener las fichas disponibles para mover
         fichas_disponibles = [i for i, pos in enumerate(self.player_colors_and_positions[bot_nombre][1]) if pos != -1]

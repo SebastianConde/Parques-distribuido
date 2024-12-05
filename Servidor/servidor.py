@@ -390,6 +390,7 @@ class Server:
                                 else:
                                     self.parques.cambiar_turno()
                                     self.intentos_fallidos = 0
+                                    jugador.pares_consecutivos = 0
 
                             if self.parques.ganador:
                                 fichas_en_carcel = []
