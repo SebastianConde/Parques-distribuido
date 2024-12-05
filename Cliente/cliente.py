@@ -9,7 +9,7 @@ import ast
 import MapeoTablero as MP
 
 class Cliente:
-    def __init__(self, host='127.0.0.1', port=65432):
+    def __init__(self, host='10.253.48.60', port=65432):
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host = host
         self.port = port
@@ -52,9 +52,6 @@ class Cliente:
         self.esperando_fichas = False
         self.ficha_a_guardar = None
         self.esperando_ficha_sacar = False
-
-        #Emergencia
-        self.esperando_bots = False
 
     def recibir_mensajes(self):
         """Thread worker para recibir mensajes del servidor"""
@@ -637,17 +634,6 @@ class Cliente:
                                 self.juego.dibujar_dados(self.dado1, self.dado2)
                         else:
                             self.juego.dibujar_dados(6, 6)
-                        if self.esperando_bots:
-                            # Buscar en la lista de jugadores los que se llamen Bot-
-                            bots = []
-                            for name, color in self.jugadores:
-                                if "Bot-" in name:
-                                    bots.append((color, self.juego.jugadores[name]["posiciones"]))
-
-                            # Enviar las posiciones de los bots
-                            mensaje = "posiciones_bots:" + ";".join([f"{color}:{','.join(map(str, posiciones))}" for color, posiciones in bots])
-                            self.client_socket.sendall(mensaje.encode('utf-8'))
-                            self.esperando_bots = False
                         if self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados:
                             self.juego.crear_ventana_dados(self.x_ventana, self.y_ventana, self.dado1, self.dado2, self.actualizar_ventana_dados)
                             self.estoy_ventana_dados = False

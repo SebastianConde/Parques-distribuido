@@ -8,7 +8,7 @@ from constantes import TipoDeCelda
 import re
 
 class Server:
-    def __init__(self, host='127.0.0.1', port=65432):
+    def __init__(self, host='10.253.48.60', port=65432):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind((host, port))
         self.server.listen(4)
@@ -662,36 +662,7 @@ class Server:
                                         if "CIELO" in ficha['pos']:
                                             posiciones[ficha['numero'] - 1] = f"{ficha['pos']}"
                                         else:
-                                            try:
-                                                # Intentar acceder a las posiciones y realizar la asignación
-                                                posiciones[ficha['numero'] - 1] = f"CAMINO_CIELO:{ficha['pos']}"
-                                            except TypeError:
-                                                print(f"Error obteniendo posiciones de {bot_nombre} - 'posiciones' es un booleano.")
-                                                # Solicitar las posiciones a uno de los clientes, al primero
-                                                self.send_message(self.clients[0][0], "Dame las posiciones bots")
-                                                respuesta = self.clients[0][0].recv(1024).decode('utf-8')
-                                                
-                                                if "posiciones_bots" in respuesta:
-                                                    # Extraer las posiciones
-                                                    _, datos_bots = respuesta.split(":", 1)  # Separar la clave del valor
-                                                    lista_bots = datos_bots.split(";")  # Dividir por ';'
-
-                                                    for bot_data in lista_bots:
-                                                        color, posiciones_str = bot_data.split(":")  # Separar color y posiciones
-                                                        posiciones = posiciones_str.split(",")  # Obtener las posiciones como lista de cadenas
-
-                                                        # Convertir las posiciones a enteros o cadenas según la lógica especificada
-                                                        for i in range(len(posiciones)):
-                                                            if posiciones[i] == '-1':
-                                                                posiciones[i] = -1  # Mantener -1 como entero
-                                                            else:
-                                                                posiciones[i] = str(posiciones[i])  # Convertir el resto a cadena
-
-                                                        # Aquí puedes almacenar estas posiciones en tu diccionario
-                                                        bot_nombre = f"Bot-{len(self.player_colors_and_positions) + 1}"  # Generar nombre para el bot si es necesario
-                                                        self.player_colors_and_positions[bot_nombre] = (int(color), posiciones)  # Actualizar el diccionario
-
-                                                        print(f"Color: {color}, Posiciones: {posiciones}")
+                                            posiciones[ficha['numero'] - 1] = f"CAMINO_CIELO:{ficha['pos']}"
 
                                 
                             initial_positions_message += f"{nombre}.{color}.{posiciones};"
@@ -744,36 +715,7 @@ class Server:
                                         if "CIELO" in ficha['pos']:
                                             posiciones[ficha['numero'] - 1] = f"{ficha['pos']}"
                                         else:
-                                            try:
-                                                # Intentar acceder a las posiciones y realizar la asignación
-                                                posiciones[ficha['numero'] - 1] = f"CAMINO_CIELO:{ficha['pos']}"
-                                            except TypeError:
-                                                print(f"Error obteniendo posiciones de {bot_nombre} - 'posiciones' es un booleano.")
-                                                # Solicitar las posiciones a uno de los clientes, al primero
-                                                self.send_message(self.clients[0][0], "Dame las posiciones bots")
-                                                respuesta = self.clients[0][0].recv(1024).decode('utf-8')
-                                                
-                                                if "posiciones_bots" in respuesta:
-                                                    # Extraer las posiciones
-                                                    _, datos_bots = respuesta.split(":", 1)  # Separar la clave del valor
-                                                    lista_bots = datos_bots.split(";")  # Dividir por ';'
-
-                                                    for bot_data in lista_bots:
-                                                        color, posiciones_str = bot_data.split(":")  # Separar color y posiciones
-                                                        posiciones = posiciones_str.split(",")  # Obtener las posiciones como lista de cadenas
-
-                                                        # Convertir las posiciones a enteros o cadenas según la lógica especificada
-                                                        for i in range(len(posiciones)):
-                                                            if posiciones[i] == '-1':
-                                                                posiciones[i] = -1  # Mantener -1 como entero
-                                                            else:
-                                                                posiciones[i] = str(posiciones[i])  # Convertir el resto a cadena
-
-                                                        # Aquí puedes almacenar estas posiciones en tu diccionario
-                                                        bot_nombre = f"Bot-{len(self.player_colors_and_positions) + 1}"  # Generar nombre para el bot si es necesario
-                                                        self.player_colors_and_positions[bot_nombre] = (int(color), posiciones)  # Actualizar el diccionario
-
-                                                        print(f"Color: {color}, Posiciones: {posiciones}")
+                                            posiciones[ficha['numero'] - 1] = f"CAMINO_CIELO:{ficha['pos']}"
                                 
                             initial_positions_message += f"{nombre}.{color}.{posiciones};"
 
