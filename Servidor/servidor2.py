@@ -8,7 +8,7 @@ from constantes import TipoDeCelda
 import re
 
 class Server:
-    def __init__(self, host='10.253.48.60', port=65432):
+    def __init__(self, host='127.0.0.1', port=65432):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind((host, port))
         self.server.listen(4)

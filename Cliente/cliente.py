@@ -9,7 +9,7 @@ import ast
 import MapeoTablero as MP
 
 class Cliente:
-    def __init__(self, host='10.253.48.60', port=65432):
+    def __init__(self, host='127.0.0.1', port=65432):
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host = host
         self.port = port
