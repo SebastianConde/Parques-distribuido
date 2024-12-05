@@ -53,6 +53,9 @@ class Cliente:
         self.ficha_a_guardar = None
         self.esperando_ficha_sacar = False
 
+        #Emergencia
+        self.esperando_bots = False
+
     def recibir_mensajes(self):
         """Thread worker para recibir mensajes del servidor"""
         while self.running:
@@ -430,6 +433,8 @@ class Cliente:
             elif "Tienes 3 pares consecutivos. Selecciona una ficha para sacar." in mensaje:
                 self.esperando_ficha_sacar = True
                 self.mostrar_mensaje(mensaje)
+            elif " Dame las posiciones bots" in mensaje:
+                self.esperando_bots = True
             elif "Lo sentimos, hay un juego en curso." in mensaje:
                 self.mostrar_mensaje_con_delay(mensaje)
                 self.estado_actual = "MENU"
@@ -632,6 +637,17 @@ class Cliente:
                                 self.juego.dibujar_dados(self.dado1, self.dado2)
                         else:
                             self.juego.dibujar_dados(6, 6)
+                        if self.esperando_bots:
+                            # Buscar en la lista de jugadores los que se llamen Bot-
+                            bots = []
+                            for name, color in self.jugadores:
+                                if "Bot-" in name:
+                                    bots.append((color, self.juego.jugadores[name]["posiciones"]))
+
+                            # Enviar las posiciones de los bots
+                            mensaje = "posiciones_bots:" + ";".join([f"{color}:{','.join(map(str, posiciones))}" for color, posiciones in bots])
+                            self.client_socket.sendall(mensaje.encode('utf-8'))
+                            self.esperando_bots = False
                         if self.x_ventana != 0 and self.y_ventana != 0 and self.ventana_dados:
                             self.juego.crear_ventana_dados(self.x_ventana, self.y_ventana, self.dado1, self.dado2, self.actualizar_ventana_dados)
                             self.estoy_ventana_dados = False
